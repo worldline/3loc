@@ -1,23 +1,24 @@
 {
   "name": "3loc",
   "version": "1.0.0",
-  "description": "A simple-yet-customizable integration testing framework",
+  "description": "A simple-yet-customizable integration test tool",
   "scripts": {
     "test": "gulp test"
   },
   "author": "feugy <damien.feugas@gmail.com>",
   "license": "MIT",
-  "devDependencies": {
+  "dependencies": {
     "chai": "^3.4.1",
+    "commander": "^2.9.0",
+    "csv-parse": "^1.0.1",
+    "mocha": "^2.3.4",
+    "request": "^2.67.0"
+  },
+  "devDependencies": {
     "gulp": "^3.9.0",
     "gulp-eslint": "^1.1.1",
     "gulp-istanbul": "^0.10.3",
     "gulp-mocha": "^2.2.0",
-    "gulp-sequence": "^0.4.3",
-    "gulp-util": "^3.0.7",
-    "mocha": "^2.3.4"
-  },
-  "dependencies": {
-    "csv-parse": "^1.0.1"
+    "gulp-util": "^3.0.7"
   }
 }

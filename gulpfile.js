@@ -84,7 +84,7 @@ const makeTest = (fail, prefix) =>
 
 // Test tasks, entierly relying on mocha + istanbull (for coverage)
 gulp.task('test', ['pre-test'], makeTest(true));
-gulp.task('test-nofail', ['pre-test-nofail'], makeTest(false, '\n\n\n--- new run'));
+gulp.task('test-nofail', ['pre-test-nofail'], makeTest(false, '\n\n\n--- New run'));
 
 gulp.task('default', () =>
   gulp.watch(paths.sources.concat([paths.tests]), ['test-nofail'])

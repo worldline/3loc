@@ -102,7 +102,8 @@ rules:
   no-underscore-dangle: 2
   no-unexpected-multiline: 2
   no-unneeded-ternary: 2
-  no-unused-expressions: 2
+  # Because of chai assertions like `to.be.empty`, or `to.be.true`
+  no-unused-expressions: 0
   no-unused-vars: 2
   no-unreachable: 2
   no-useless-call: 2
