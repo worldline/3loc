@@ -2,6 +2,9 @@
   "name": "3loc",
   "version": "1.0.0",
   "description": "A simple-yet-customizable integration test tool",
+  "bin": {
+    "3loc": "lib/cli.js"
+  },
   "scripts": {
     "test": "gulp test"
   },
