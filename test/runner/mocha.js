@@ -15,17 +15,23 @@ class Failing extends Base {
   }
 }
 
+const opts = {reporter: 'base'};
+
 describe('Mocha runner', () => {
 
   it('should run without scenarii', () => {
-    return run([]).then(report => {
-      expect(report).to.be.empty;
+    return run([], opts).then(report => {
+      expect(report).to.be.exist;
+      expect(report).to.have.property('tests').that.equals(0);
+      expect(report).to.have.property('failures').that.equals(0);
     });
   });
 
   it('should execute failing test an report errors', () => {
-    return run([new Failing('test 1')]).then(report => {
-      expect(report).to.be.empty;
+    return run([new Failing('test 1')], opts).then(report => {
+      expect(report).to.be.exist;
+      expect(report).to.have.property('tests').that.equals(1);
+      expect(report).to.have.property('failures').that.equals(1);
     });
   });
 

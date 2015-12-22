@@ -11,8 +11,20 @@ describe('CSV Spec parser', () => {
 
   it('should fail on unexisting file', () => {
     return parse(join(fixtures, 'unexisting-base.csv')).catch(err => {
-      expect(err).to.have.property('message').that.match(/ENOENT/);
+      expect(err).to.have.property('message').that.matches(/ENOENT/);
     });
+  });
+
+  it('should validate spec file name', () => {
+    return parse('nospec.csv').catch(err => {
+      expect(err).to.have.property('message').that.matches(/does not include scenario id/);
+    })
+  });
+
+  it('should check scenario existence', () => {
+    return parse('spec-unknown.csv').catch(err => {
+      expect(err).to.have.property('message').that.matches(/unknown is not a known scenario/);
+    })
   });
 
   it('should read empty file', () => {
