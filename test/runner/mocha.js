@@ -31,7 +31,7 @@ describe(`Mocha runner`, () => {
   });
 
   it(`should execute failing test an report errors`, () => {
-    return run([new Failing(`test 1`)], opts).then(report => {
+    return run([new Failing(`test 1`, {})], opts).then(report => {
       expect(report).to.be.exist;
       expect(report).to.have.property(`tests`).that.equals(1);
       expect(report).to.have.property(`failures`).that.equals(1);

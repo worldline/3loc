@@ -1,10 +1,29 @@
 'use strict';
 
+const assert = require(`joi`).assert;
+const any = require(`joi`).any;
+
 /**
  * Represents an integration test scenario
  * @class
  */
 module.exports = class Base {
+
+  /**
+   * Accepts any fixtures.
+   * @returns {Joi.Any} A Joi schema used within scenario constructor to validates incoming fixtures.
+   */
+  static get schema() {
+    return any();
+  }
+
+  /**
+   * Name of the property in features that contains test name
+   * @returns {String}, default to 'name'
+   */
+  static get nameProperty() {
+    return `name`;
+  }
 
   /**
    * Builds a scenario with a name and data fixture
@@ -14,6 +33,10 @@ module.exports = class Base {
    */
   constructor(name, fixtures) {
     this.name = name;
+    if (!fixtures) {
+      throw new Error(`can't create ${this.constructor.name} scenario without fixtures`);
+    }
+    assert(fixtures, this.constructor.schema);
     this.fixtures = fixtures;
   }
 

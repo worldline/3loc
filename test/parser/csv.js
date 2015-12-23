@@ -45,10 +45,21 @@ describe(`CSV Spec parser`, () => {
     });
   });
 
-  it(`should not extract Spec instances`, () => {
+  it(`should generate test names`, () => {
+    return parse(join(fixtures, `noname-base.csv`)).then(scenarii => {
+      expect(scenarii).to.have.lengthOf(2);
+      expect(scenarii[0]).to.be.an.instanceOf(Base);
+      expect(scenarii[0]).to.have.property(`name`).that.equals(`test 1`);
+      expect(scenarii[1]).to.be.an.instanceOf(Base);
+      expect(scenarii[1]).to.have.property(`name`).that.equals(`test 2`);
+    });
+  });
+
+  it(`should extract Spec instances`, () => {
     return parse(join(fixtures, `simple-base.csv`)).then(scenarii => {
       expect(scenarii).to.have.lengthOf(1);
       expect(scenarii[0]).to.be.an.instanceOf(Base);
+      expect(scenarii[0]).to.have.property(`name`).that.equals(`mon test 1`);
       expect(scenarii[0].fixtures).to.have.property(`id`).that.equals(123456);
       expect(scenarii[0].fixtures).to.have.property(`insurer`).that.equals(`IN1`);
       expect(scenarii[0].fixtures).to.have.property(`scoring`).that.equals(`C1`);

@@ -29,7 +29,11 @@ const parseFile = (Scenario, content) =>
         return reject(err);
       }
       let i = 0;
-      resolve(fixtures.map(fixture => new Scenario(`test ${++i}`, fixture)));
+      resolve(fixtures.map(fixture => {
+        let name = fixture[Scenario.nameProperty] || `test ${++i}`;
+        delete fixture.name;
+        return new Scenario(name, fixture);
+      }));
     })
   );
 

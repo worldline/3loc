@@ -3,6 +3,10 @@
 const SpecBase = require(`./base`);
 const chai = require(`chai`);
 const request = require(`request`);
+const Joi = require(`joi`);
+const object = Joi.object;
+const string = Joi.string;
+const number = Joi.number;
 const expect = chai.expect;
 
 chai.config.truncateThreshold = 0;
@@ -14,20 +18,17 @@ chai.config.truncateThreshold = 0;
 module.exports = class RequestSpec extends SpecBase {
 
   /**
-   * Builds a scenario with a name and data fixture
-   *
-   * @param {String} name - test's name
-   * @param {Object} fixtures - test data fixtures
-   * @param {String} fixtures.host - requested server url (protocol, host and port)
-   * @param {String} fixtures.url - requested url (with url-encoded parameters)
-   * @param {Number} fixtures.code - expected Http code
+   * @returns {Joi.object} Schema used to validate fixtures
+   * - {String} host - requested server url (protocol, host and port)
+   * - {String} url - requested url (with url-encoded parameters)
+   * - {Number} code - expected Http code
    */
-  constructor(name, fixtures) {
-    super(name, fixtures);
-
-    expect(this.fixtures).to.have.property(`host`).that.is.a(`string`);
-    expect(this.fixtures).to.have.property(`url`).that.is.a(`string`);
-    expect(this.fixtures).to.have.property(`code`).that.is.a(`number`);
+  static get schema() {
+    return object().keys({
+      host: string().required().regex(/^https?:\/\//),
+      url: string().required().min(1),
+      code: number().required()
+    });
   }
 
   /**
