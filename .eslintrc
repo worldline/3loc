@@ -144,7 +144,8 @@ rules:
   operator-linebreak: [2, after]
   # TODO padded-blocks: [2, never]
   prefer-arrow-callback: 2
-  prefer-spread: 2
+  # Can't use spread on node 4
+  prefer-spread: 0
   prefer-template: 2
   quote-props: [2, as-needed, {keywords: true}]
   quotes: [2, single]
