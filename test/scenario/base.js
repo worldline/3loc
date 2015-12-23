@@ -4,6 +4,85 @@ const expect = require(`chai`).expect;
 const Joi = require(`joi`);
 const Base = require(`../../src/scenario/base`);
 
+// a scenario that has a test waiting for a callback parameter
+class CallbackScenario extends Base {
+
+  // define a schema for fixtures data
+  static get schema() {
+    return Joi.object({
+      works: Joi.boolean().required()
+    });
+  }
+
+  generate() {
+    return done => {
+      setTimeout(() => {
+        done(this.fixtures.works ? null : new Error(`not working !`));
+      }, 0);
+    };
+  }
+}
+
+// a scenario that has a test returning a promise
+class PromiseScenario extends Base {
+
+  static get schema() {
+    return Joi.object({
+      fails: Joi.boolean().required()
+    });
+  }
+
+  generate() {
+    return () => new Promise((resolve, reject) => {
+      if (this.fixtures.fails) {
+        reject(new Error(`fails !`));
+      } else {
+        resolve();
+      }
+    });
+  }
+}
+
+// a scenario that has a synchrnous test
+class SynchronousScenario extends Base {
+
+  static get schema() {
+    return Joi.object({
+      errored: Joi.boolean().required()
+    });
+  }
+
+  generate() {
+    return () => {
+      if (this.fixtures.errored) {
+        throw new Error(`error !`);
+      }
+    };
+  }
+}
+
+class ComplexScenario extends Base {
+
+  static get schema() {
+    return Joi.object({
+      works: Joi.boolean().required(),
+      errored: Joi.boolean().required(),
+      fails: Joi.boolean().required()
+    });
+  }
+
+  constructor(name, fixtures) {
+    super(name, fixtures);
+    this.test1 = new SynchronousScenario(name, {errored: fixtures.errored});
+    this.test2 = new PromiseScenario(name, {fails: fixtures.fails});
+    this.test3 = new CallbackScenario(name, {works: fixtures.works});
+  }
+
+  generate() {
+    return () => Promise.all([this.test2.run(), this.test1.run()]).then(this.test3.run.bind(this.test3));
+  }
+}
+
 describe(`Base scenario`, () => {
 
   it(`should accept name and fixtures in constructor`, () => {
@@ -27,34 +106,153 @@ describe(`Base scenario`, () => {
     expect(test).to.throw(/not implemented/);
   });
 
-  describe(`given a scenario class`, () => {
+  it(`should be ran`, done => {
+    new Base(`test`, {}).run().
+      then(() => done(`should have failed !`)).
+      catch(exc => {
+        expect(exc).to.exist;
+        expect(exc.message).to.match(/not implemented/);
+        done();
+      });
+  });
 
-    class Scenario extends Base {
-
-      // define a schema for fixtures data
-      static get schema() {
-        return Joi.object({
-          acceptable: Joi.boolean().required()
-        });
-      }
-    }
+  describe(`given a scenario with validation`, () => {
 
     it(`should validates fixtures data presence`, () => {
       expect(() =>
-        new Scenario(`test`)
+        new CallbackScenario(`test`)
       ).to.throw(/without fixtures/);
     });
 
     it(`should not allowed empty fixtures`, () => {
       expect(() =>
-        new Scenario(`test`, {})
-      ).to.throw(/"acceptable" is required/);
+        new CallbackScenario(`test`, {})
+      ).to.throw(/"works" is required/);
     });
 
     it(`should validates fixtures data content`, () => {
       expect(() =>
-        new Scenario(`test`, {acceptable: true, unknown: []})
+        new CallbackScenario(`test`, {works: true, unknown: []})
       ).to.throw(/"unknown" is not allowed/);
     });
   });
+
+  describe(`given a scenario with callback test`, () => {
+
+    it(`should be ran in callback-style`, () => {
+      return new CallbackScenario(`test`, {works: true}).
+        run().
+        then(arg => expect(arg).not.to.exist);
+    });
+
+    it(`should collect error in callback-style`, done => {
+      new CallbackScenario(`test`, {works: false}).
+        run().
+        then(() => done(`should have failed !`)).
+        catch(exc => {
+          expect(exc).to.exist;
+          expect(exc.message).to.equals(`not working !`);
+          done();
+        });
+    });
+  });
+
+  describe(`given a scenario with promise test`, () => {
+
+    it(`should be ran in promise-style`, () => {
+      return new PromiseScenario(`test`, {fails: false}).
+        run().
+        then(arg => expect(arg).not.to.exist);
+    });
+
+    it(`should collect error in promise-style`, done => {
+      new PromiseScenario(`test`, {fails: true}).
+        run().
+        then(() => done(`should have failed !`)).
+        catch(exc => {
+          expect(exc).to.exist;
+          expect(exc.message).to.equals(`fails !`);
+          done();
+        });
+    });
+  });
+
+  describe(`given a scenario with synchronous test`, () => {
+
+    it(`should be ran in synchronous-style`, () => {
+      return new SynchronousScenario(`test`, {errored: false}).
+        run().
+        then(arg => expect(arg).not.to.exist);
+    });
+
+    it(`should collect error in synchronous-style`, done => {
+      new SynchronousScenario(`test`, {errored: true}).
+        run().
+        then(() => done(`should have failed !`)).
+        catch(exc => {
+          expect(exc).to.exist;
+          expect(exc.message).to.equals(`error !`);
+          done();
+        });
+    });
+  });
+
+  describe(`given a complex scenario`, () => {
+
+    it(`should be ran`, () => {
+      return new ComplexScenario(`test`, {
+        errored: false,
+        fails: false,
+        works: true
+      }).
+        run().
+        then(arg => expect(arg).not.to.exist);
+    });
+
+    it(`should collect error within synchronous code`, done => {
+      return new ComplexScenario(`test`, {
+        errored: true,
+        fails: false,
+        works: true
+      }).
+        run().
+        then(() => done(`should have failed !`)).
+        catch(exc => {
+          expect(exc).to.exist;
+          expect(exc.message).to.equals(`error !`);
+          done();
+        });
+    });
+
+    it(`should collect error within promise code`, done => {
+      return new ComplexScenario(`test`, {
+        errored: false,
+        fails: true,
+        works: true
+      }).
+        run().
+        then(() => done(`should have failed !`)).
+        catch(exc => {
+          expect(exc).to.exist;
+          expect(exc.message).to.equals(`fails !`);
+          done();
+        });
+    });
+
+    it(`should collect error within callback code`, done => {
+      return new ComplexScenario(`test`, {
+        errored: false,
+        fails: false,
+        works: false
+      }).
+        run().
+        then(() => done(`should have failed !`)).
+        catch(exc => {
+          expect(exc).to.exist;
+          expect(exc.message).to.equals(`not working !`);
+          done();
+        });
+    });
+  });
+
 });

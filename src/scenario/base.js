@@ -41,6 +41,38 @@ module.exports = class Base {
   }
 
   /**
+   * Run the scenario, for example when using from another scenario.
+   *
+   * @returns {Promise} fullfilled when scenario is done.
+   */
+  run() {
+    const test = this.generate();
+    return new Promise((resolve, reject) => {
+      if (test.length === 1) {
+        // callback style
+        test(err => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      } else {
+        // run to get a promise...
+        let result = test();
+        if (result instanceof Promise) {
+          // if it's a promise, resolve later
+          result.then(resolve).catch(reject);
+        } else {
+          // if not, then resolve manually
+          resolve();
+        }
+      }
+    });
+  }
+
+  /**
+   * @private
    * Returns a function that, when executed, will performs the test.
    * Contains any code needed by the scenario.
    *
@@ -52,7 +84,6 @@ module.exports = class Base {
    * In any case, thrown exceptions (in case of failing assertions) will be caught using domains,
    * and lead to test failure
    *
-   * @private
    * @return {Function} the test function
    */
   generate() {

@@ -1,6 +1,5 @@
 # TODO list
 
-0. compose spec be reusing other specs (invoke method)
 0. share code between tests (server init)
 0. document spec authoring
 0. request scenario: header, query parameter and http method in fixture.
