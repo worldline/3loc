@@ -1,7 +1,7 @@
 'use strict';
 
 const expect = require(`chai`).expect;
-const Base = require(`../../lib/scenario/base`);
+const Base = require(`../../src/scenario/base`);
 
 describe(`Base scenario`, () => {
 

@@ -1,9 +1,9 @@
 'use strict';
 
 const expect = require(`chai`).expect;
-const run = require(`../../lib/runner/mocha`);
-const Base = require(`../../lib/scenario/base`);
-const logger = require(`../../lib/utils/logger`)(`mocha`);
+const run = require(`../../src/runner/mocha`);
+const Base = require(`../../src/scenario/base`);
+const shutdownLoggers = require(`../utils/test-utils`).shutdownLoggers;
 
 /**
  * Just a scenario that generates failing tests
@@ -20,16 +20,7 @@ const opts = {reporter: `base`};
 
 describe(`Mocha runner`, () => {
 
-  let loggerLevel;
-
-  before(() => {
-    loggerLevel = logger.level;
-    logger.level = `off`;
-  });
-
-  after(() => {
-    logger.level = loggerLevel;
-  });
+  shutdownLoggers(`mocha`);
 
   it(`should run without scenarii`, () => {
     return run([], opts).then(report => {

@@ -3,17 +3,8 @@
 
 const expect = require(`chai`).expect;
 const moment = require(`moment`);
-const getLogger = require(`../../lib/utils/logger`);
-
-/**
- * Purge string from ANSI styles (starting with \u001b character)
- *
- * @param {String} str - string to purge
- * @return {String} purged version of the string
- */
-const purgeStyle = str => {
-  return str.replace(/\u001b\[\d+m/g, '');
-};
+const purgeStyle = require(`./test-utils`).purgeStyle;
+const getLogger = require(`../../src/utils/logger`);
 
 describe(`Logger`, () => {
 

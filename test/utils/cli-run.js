@@ -2,23 +2,14 @@
 
 const expect = require(`chai`).expect;
 const join = require(`path`).join;
-const run = require(`../../lib/utils/cli-run`);
-const logger = require(`../../lib/utils/logger`)(`mocha`);
+const shutdownLoggers = require(`./test-utils`).shutdownLoggers;
+const run = require(`../../src/utils/cli-run`);
 
 const fixtures = join(__dirname, `..`, `fixtures`);
 
 describe(`CLI run`, () => {
 
-  let loggerLevel;
-
-  before(() => {
-    loggerLevel = logger.level;
-    logger.level = `off`;
-  });
-
-  after(() => {
-    logger.level = loggerLevel;
-  });
+  shutdownLoggers([`mocha`, `cli-run`]);
 
   it(`should run test with specified report`, () => {
     return run(join(fixtures, `simple-base.csv`), {reporter: `base`}).
@@ -27,4 +18,13 @@ describe(`CLI run`, () => {
         expect(report).to.have.property(`tests`).that.equals(1);
       });
   });
+
+  it(`should report runner crash`, () => {
+    return run(join(fixtures, `simple-base.csv`), {reporter: `unexisting`}).
+      catch(exc => {
+        expect(exc).to.exist;
+        expect(exc).to.match(/invalid reporter "unexisting"/);
+      });
+  });
+
 });

@@ -8,7 +8,7 @@ const istanbul = require('gulp-istanbul');
 
 // Single path declarations
 const paths = {
-  sources: ['./lib/**/*.js'],
+  sources: ['./src/**/*.js'],
   tests: './test/**/*.js'
 };
 

@@ -2,8 +2,8 @@
 
 const expect = require(`chai`).expect;
 const join = require(`path`).join;
-const parse = require(`../../lib/parser/csv`);
-const Base = require(`../../lib/scenario/base`);
+const parse = require(`../../src/parser/csv`);
+const Base = require(`../../src/scenario/base`);
 
 const fixtures = join(__dirname, `..`, `fixtures`);
 
