@@ -45,7 +45,7 @@ module.exports = class Request extends Base {
         followRedirect: false
       }, (err, resp) => {
         expect(err, `Unexpected network error`).not.to.exist;
-        expect(resp, `Unexpected HTTP response code`).to.have.property(`statusCode`).that.equals(this.fixtures.code);
+        expect(resp, `Unexpected HTTP status code`).to.have.property(`statusCode`).that.equals(this.fixtures.code);
         done();
       });
   }

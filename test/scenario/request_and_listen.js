@@ -59,7 +59,7 @@ describe(`Request & Listen Scenario`, () => {
 
     afterEach(done => server.stop(done));
 
-    it.skip(`should request a given url and awaits for another one`, done => {
+    it(`should request a given url and awaits for another one`, done => {
       server.route({
         method: `GET`,
         path: url,
@@ -75,7 +75,7 @@ describe(`Request & Listen Scenario`, () => {
               return done(err);
             }
             // TODO validate response
-            done()
+            done();
           });
         }
       });
@@ -89,7 +89,7 @@ describe(`Request & Listen Scenario`, () => {
     });
 
 
-    it(`should report unexpected first request code`, done => {
+    it(`should report unexpected first request error`, done => {
       server.route({
         method: `GET`,
         path: url,
@@ -105,9 +105,6 @@ describe(`Request & Listen Scenario`, () => {
         listeningPort
       }).
         run().
-        then(() => {
-          done(`should have failed`);
-        }).
         catch(err => {
           expect(err).to.exist;
           expect(err).to.be.an.instanceOf(Error);

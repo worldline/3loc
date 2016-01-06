@@ -1,6 +1,5 @@
 'use strict';
 
-const domain = require('domain');
 const assert = require(`joi`).assert;
 const any = require(`joi`).any;
 
@@ -49,40 +48,47 @@ module.exports = class Base {
   run() {
     const test = this.generate();
     return new Promise((resolve, reject) => {
-      const sandbox = domain.create();
+      // previous uncaught exception handlers
+      let listeners = process.listeners(`uncaughtException`);
 
-      // common ending that dispose the sandbox for exiting
+      // common ending that rewire uncaught exception listeners before exiting
       const end = err => {
-        sandbox.dispose();
+        process.removeListener(`uncaughtException`, end);
+        if (listeners) {
+          listeners.forEach(listener => process.on(`uncaughtException`, listener));
+          listeners = [];
+        }
 
         if (err) {
+          // console.log(`reject ${this.name} with error ${err}`);
           reject(err);
         } else {
           resolve();
         }
       };
 
-      sandbox.on(`error`, end);
-      sandbox.run(() => {
-        try {
-          if (test.length === 1) {
-            // callback style
-            test(end);
+      // unwire existing listener and put our own
+      process.removeAllListeners(`uncaughtException`);
+      process.on(`uncaughtException`, end);
+
+      try {
+        if (test.length === 1) {
+          // callback style
+          test(end);
+        } else {
+          // run to get a promise...
+          let result = test();
+          if (result instanceof Promise) {
+            // if it's a promise, resolve later
+            result.then(end).catch(end);
           } else {
-            // run to get a promise...
-            let result = test();
-            if (result instanceof Promise) {
-              // if it's a promise, resolve later
-              result.then(end).catch(end);
-            } else {
-              // if not, then resolve manually
-              end();
-            }
+            // if not, then resolve manually
+            end();
           }
-        } catch (exc) {
-          end(exc);
         }
-      });
+      } catch (exc) {
+        end(exc);
+      }
     });
   }
 
