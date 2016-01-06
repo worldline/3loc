@@ -36,7 +36,7 @@ describe(`Request & Listen Scenario`, () => {
     })).to.throw(/"listeningPort" is required/);
   });
 
-  describe.only(`given a running server`, () => {
+  describe(`given a running server`, () => {
 
     let server;
     let port;
@@ -59,7 +59,7 @@ describe(`Request & Listen Scenario`, () => {
 
     afterEach(done => server.stop(done));
 
-    it.skip(`should request a given url and awaits for another one`, () => {
+    it.skip(`should request a given url and awaits for another one`, done => {
       server.route({
         method: `GET`,
         path: url,
@@ -75,16 +75,17 @@ describe(`Request & Listen Scenario`, () => {
               return done(err);
             }
             // TODO validate response
+            done()
           });
         }
       });
 
-      return new RequestAndListen(`test 1`, {
+      new RequestAndListen(`test 1`, {
         host,
         url,
         code: 200,
         listeningPort
-      }).run();
+      }).run().catch(done);
     });
 
 
@@ -102,14 +103,18 @@ describe(`Request & Listen Scenario`, () => {
         url,
         code: 200,
         listeningPort
-      }).run().then(() => {
-        done(`should have failed`);
-      }).catch(err => {
-        expect(err).to.exist;
-        expect(err).to.be.an.instanceOf(Error);
-        expect(err.message).to.include(`204`);
-        done();
-      });
+      }).
+        run().
+        then(() => {
+          done(`should have failed`);
+        }).
+        catch(err => {
+          expect(err).to.exist;
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.include(`204`);
+          done();
+        }).
+        catch(done);
     });
 
   });

@@ -1,10 +1,8 @@
 'use strict';
 
-// const domain = require('domain');
+const domain = require('domain');
 const assert = require(`joi`).assert;
 const any = require(`joi`).any;
-
-let id = 0;
 
 /**
  * Represents an integration test scenario
@@ -36,7 +34,6 @@ module.exports = class Base {
    */
   constructor(name, fixtures) {
     this.name = name;
-    this.num = ++id;
     if (!fixtures) {
       throw new Error(`can't create ${this.constructor.name} scenario without fixtures`);
     }
@@ -52,16 +49,12 @@ module.exports = class Base {
   run() {
     const test = this.generate();
     return new Promise((resolve, reject) => {
-      // const sandbox = domain.create();
-      // sandbox.num = this.num;
-      // console.log(`domain created for ${this.num}`);
+      const sandbox = domain.create();
 
       // common ending that dispose the sandbox for exiting
       const end = err => {
-        /*sandbox.dispose();
-        console.log(`domain disposed for ${this.num}`);
-        console.log('on stack', process.domain && process.domain.num);*/
-        console.log(`${this.num} ends with ${err}`)
+        sandbox.dispose();
+
         if (err) {
           reject(err);
         } else {
@@ -69,10 +62,9 @@ module.exports = class Base {
         }
       };
 
-      /* sandbox.on(`error`, end);
+      sandbox.on(`error`, end);
       sandbox.run(() => {
-        console.log(process.domain);
-        try {*/
+        try {
           if (test.length === 1) {
             // callback style
             test(end);
@@ -87,10 +79,10 @@ module.exports = class Base {
               end();
             }
           }
-        /*} catch (exc) {
+        } catch (exc) {
           end(exc);
         }
-      });*/
+      });
     });
   }
 

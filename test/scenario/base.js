@@ -162,7 +162,8 @@ describe(`Base scenario`, () => {
           expect(exc).to.exist;
           expect(exc.message).to.equals(`not working !`);
           done();
-        });
+        }).
+        catch(done);
     });
 
     it(`should collect raised error in callback-style`, done => {
@@ -173,7 +174,8 @@ describe(`Base scenario`, () => {
           expect(exc).to.exist;
           expect(exc.message).to.equals(`not working !`);
           done();
-        });
+        }).
+        catch(done);
     });
   });
 
@@ -193,7 +195,8 @@ describe(`Base scenario`, () => {
           expect(exc).to.exist;
           expect(exc.message).to.equals(`fails !`);
           done();
-        });
+        }).
+        catch(done);
     });
 
     it(`should collect raised error in promise-style`, done => {
@@ -204,7 +207,8 @@ describe(`Base scenario`, () => {
           expect(exc).to.exist;
           expect(exc.message).to.equals(`fails !`);
           done();
-        });
+        }).
+        catch(done);
     });
   });
 
@@ -226,7 +230,8 @@ describe(`Base scenario`, () => {
           expect(exc).to.exist;
           expect(exc.message).to.equals(`error !`);
           done();
-        });
+        }).
+        catch(done);
     });
   });
 
@@ -254,7 +259,8 @@ describe(`Base scenario`, () => {
           expect(exc).to.exist;
           expect(exc.message).to.equals(`error !`);
           done();
-        });
+        }).
+        catch(done);
     });
 
     it(`should collect error within promise code`, done => {
@@ -269,7 +275,8 @@ describe(`Base scenario`, () => {
           expect(exc).to.exist;
           expect(exc.message).to.equals(`fails !`);
           done();
-        });
+        }).
+        catch(done);
     });
 
     it(`should collect error within callback code`, done => {
@@ -284,7 +291,8 @@ describe(`Base scenario`, () => {
           expect(exc).to.exist;
           expect(exc.message).to.equals(`not working !`);
           done();
-        });
+        }).
+        catch(done);
     });
   });
 

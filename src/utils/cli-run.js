@@ -15,7 +15,10 @@ const logger = require(`./logger`)(`cli-run`);
 const runTests = (specs, opts) => {
   return parse(specs).
     then(scenarii => run(scenarii, {reporter: opts.reporter})).
-    catch(err => logger.error(`failed to run tests:`, err));
+    catch(err => {
+      logger.error(`failed to run tests:`, err);
+      throw err;
+    });
 };
 
 module.exports = runTests;

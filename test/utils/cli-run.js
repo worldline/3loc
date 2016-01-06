@@ -19,12 +19,17 @@ describe(`CLI run`, () => {
       });
   });
 
-  it(`should report runner crash`, () => {
-    return run(join(fixtures, `simple-base.csv`), {reporter: `unexisting`}).
+  it(`should report runner crash`, done => {
+    run(join(fixtures, `simple-base.csv`), {reporter: `unexisting`}).
+      then(() => {
+        done(`should have failed`);
+      }).
       catch(exc => {
         expect(exc).to.exist;
         expect(exc).to.match(/invalid reporter "unexisting"/);
-      });
+        done();
+      }).
+      catch(done);
   });
 
 });
