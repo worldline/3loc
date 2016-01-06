@@ -2,7 +2,7 @@
 
 const Base = require(`./base`);
 const Request = require(`./request`);
-const Hapi = require(`hapi`);
+const express = require(`express`);
 // const chai = require(`chai`);
 const Joi = require(`joi`);
 const number = Joi.number;
@@ -38,37 +38,23 @@ module.exports = class RequestAndListen extends Base {
    */
   generate() {
     return done => {
-      const server = new Hapi.Server();
-      server.connection({
-        port: this.fixtures.listeningPort
-      });
+      const app = express();
+      let server;
 
       const end = err => {
-        server.stop(() => done(err));
+        server.close(() => done(err));
       };
 
-      server.route({
-        method: `GET`,
-        path: `/`,
-        handler: (request, reply) => {
-          // TODO validate request
-          reply();
-          end();
-        }
+      app.get(`/`, (req, res) => {
+        // TODO validate request
+        res.end();
+        end();
       });
 
-      server.route({
-        method: `*`,
-        path: `/{p*}`,
-        handler: () => end(new Error(`Unexpected request on TODO`))
-      });
-
-      server.start(err => {
-        if (err) {
-          return end(err);
-        }
+      server = app.listen(this.fixtures.listeningPort, () => {
         new Request(`${this.name} - request`, this.fixtures).run().catch(end);
       });
+      server.on(`error`, end);
     };
   }
 };

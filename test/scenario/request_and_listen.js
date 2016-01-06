@@ -1,7 +1,7 @@
 'use strict';
 
 const expect = require(`chai`).expect;
-const Hapi = require(`hapi`);
+const express = require(`express`);
 const request = require(`request`);
 const RequestAndListen = require(`../../src/scenario/request_and_listen`);
 
@@ -38,6 +38,7 @@ describe(`Request & Listen Scenario`, () => {
 
   describe(`given a running server`, () => {
 
+    let app;
     let server;
     let port;
     let url = `/`;
@@ -46,38 +47,34 @@ describe(`Request & Listen Scenario`, () => {
     let backHost;
 
     beforeEach(done => {
-      server = new Hapi.Server();
-      server.connection({port: 0});
-      server.start(err => {
-        port = server.info.port;
+      app = express();
+      server = app.listen(() => {
+        port = server.address().port;
         host = `http://localhost:${port}`;
         listeningPort = port + 1;
         backHost = `http://localhost:${listeningPort}`;
-        done(err);
+        done();
       });
+      server.on(`error`, done);
     });
 
-    afterEach(done => server.stop(done));
+    afterEach(done => server.close(done));
 
     it(`should request a given url and awaits for another one`, done => {
-      server.route({
-        method: `GET`,
-        path: url,
-        handler: (req, reply) => {
-          // TODO validate request
-          reply();
-          // sends a request
-          request({
-            method: `GET`,
-            url: backHost
-          }, err => {
-            if (err) {
-              return done(err);
-            }
-            // TODO validate response
-            done();
-          });
-        }
+      app.get(url, (req, res) => {
+        // TODO validate request
+        res.end();
+        // sends a request
+        request({
+          method: `GET`,
+          url: backHost
+        }, err => {
+          if (err) {
+            return done(err);
+          }
+          // TODO validate response
+          done();
+        });
       });
 
       new RequestAndListen(`test 1`, {
@@ -88,14 +85,9 @@ describe(`Request & Listen Scenario`, () => {
       }).run().catch(done);
     });
 
-
     it(`should report unexpected first request error`, done => {
-      server.route({
-        method: `GET`,
-        path: url,
-        handler: (req, reply) => {
-          reply().statusCode = 204;
-        }
+      app.get(url, (req, res) => {
+        res.status(204).end();
       });
 
       new RequestAndListen(`test 1`, {
@@ -109,6 +101,24 @@ describe(`Request & Listen Scenario`, () => {
           expect(err).to.exist;
           expect(err).to.be.an.instanceOf(Error);
           expect(err.message).to.include(`204`);
+          done();
+        }).
+        catch(done);
+    });
+
+    it(`should report listening server error`, done => {
+
+      new RequestAndListen(`test 1`, {
+        host,
+        url,
+        code: 200,
+        listeningPort: port
+      }).
+        run().
+        catch(err => {
+          expect(err).to.exist;
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.include(`EADDRINUSE`);
           done();
         }).
         catch(done);
