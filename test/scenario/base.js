@@ -10,13 +10,17 @@ class CallbackScenario extends Base {
   // define a schema for fixtures data
   static get schema() {
     return Joi.object({
-      works: Joi.boolean().required()
+      works: Joi.boolean().required(),
+      raised: Joi.boolean()
     });
   }
 
   generate() {
     return done => {
       setTimeout(() => {
+        if (this.fixtures.raised && !this.fixtures.works) {
+          throw new Error(`not working !`);
+        }
         done(this.fixtures.works ? null : new Error(`not working !`));
       }, 0);
     };
@@ -28,12 +32,16 @@ class PromiseScenario extends Base {
 
   static get schema() {
     return Joi.object({
-      fails: Joi.boolean().required()
+      fails: Joi.boolean().required(),
+      raised: Joi.boolean()
     });
   }
 
   generate() {
     return () => new Promise((resolve, reject) => {
+      if (this.fixtures.raised && this.fixtures.fails) {
+        throw new Error(`fails !`);
+      }
       if (this.fixtures.fails) {
         reject(new Error(`fails !`));
       } else {
@@ -67,15 +75,16 @@ class ComplexScenario extends Base {
     return Joi.object({
       works: Joi.boolean().required(),
       errored: Joi.boolean().required(),
-      fails: Joi.boolean().required()
+      fails: Joi.boolean().required(),
+      raised: Joi.boolean()
     });
   }
 
   constructor(name, fixtures) {
     super(name, fixtures);
     this.test1 = new SynchronousScenario(name, {errored: fixtures.errored});
-    this.test2 = new PromiseScenario(name, {fails: fixtures.fails});
-    this.test3 = new CallbackScenario(name, {works: fixtures.works});
+    this.test2 = new PromiseScenario(name, {fails: fixtures.fails, raised: fixtures.raised});
+    this.test3 = new CallbackScenario(name, {works: fixtures.works, raised: fixtures.raised});
   }
 
   generate() {
@@ -145,8 +154,19 @@ describe(`Base scenario`, () => {
         then(arg => expect(arg).not.to.exist);
     });
 
-    it(`should collect error in callback-style`, done => {
+    it(`should collect declarative error in callback-style`, done => {
       new CallbackScenario(`test`, {works: false}).
+        run().
+        then(() => done(`should have failed !`)).
+        catch(exc => {
+          expect(exc).to.exist;
+          expect(exc.message).to.equals(`not working !`);
+          done();
+        });
+    });
+
+    it(`should collect raised error in callback-style`, done => {
+      new CallbackScenario(`test`, {works: false, raised: true}).
         run().
         then(() => done(`should have failed !`)).
         catch(exc => {
@@ -165,8 +185,19 @@ describe(`Base scenario`, () => {
         then(arg => expect(arg).not.to.exist);
     });
 
-    it(`should collect error in promise-style`, done => {
+    it(`should collect declarative error in promise-style`, done => {
       new PromiseScenario(`test`, {fails: true}).
+        run().
+        then(() => done(`should have failed !`)).
+        catch(exc => {
+          expect(exc).to.exist;
+          expect(exc.message).to.equals(`fails !`);
+          done();
+        });
+    });
+
+    it(`should collect raised error in promise-style`, done => {
+      new PromiseScenario(`test`, {fails: true, raised: true}).
         run().
         then(() => done(`should have failed !`)).
         catch(exc => {
@@ -182,7 +213,9 @@ describe(`Base scenario`, () => {
     it(`should be ran in synchronous-style`, () => {
       return new SynchronousScenario(`test`, {errored: false}).
         run().
-        then(arg => expect(arg).not.to.exist);
+        then(arg => {
+          expect(arg).not.to.exist;
+        });
     });
 
     it(`should collect error in synchronous-style`, done => {

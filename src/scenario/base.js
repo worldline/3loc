@@ -1,7 +1,10 @@
 'use strict';
 
+// const domain = require('domain');
 const assert = require(`joi`).assert;
 const any = require(`joi`).any;
+
+let id = 0;
 
 /**
  * Represents an integration test scenario
@@ -33,6 +36,7 @@ module.exports = class Base {
    */
   constructor(name, fixtures) {
     this.name = name;
+    this.num = ++id;
     if (!fixtures) {
       throw new Error(`can't create ${this.constructor.name} scenario without fixtures`);
     }
@@ -48,26 +52,45 @@ module.exports = class Base {
   run() {
     const test = this.generate();
     return new Promise((resolve, reject) => {
-      if (test.length === 1) {
-        // callback style
-        test(err => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      } else {
-        // run to get a promise...
-        let result = test();
-        if (result instanceof Promise) {
-          // if it's a promise, resolve later
-          result.then(resolve).catch(reject);
+      // const sandbox = domain.create();
+      // sandbox.num = this.num;
+      // console.log(`domain created for ${this.num}`);
+
+      // common ending that dispose the sandbox for exiting
+      const end = err => {
+        /*sandbox.dispose();
+        console.log(`domain disposed for ${this.num}`);
+        console.log('on stack', process.domain && process.domain.num);*/
+        console.log(`${this.num} ends with ${err}`)
+        if (err) {
+          reject(err);
         } else {
-          // if not, then resolve manually
           resolve();
         }
-      }
+      };
+
+      /* sandbox.on(`error`, end);
+      sandbox.run(() => {
+        console.log(process.domain);
+        try {*/
+          if (test.length === 1) {
+            // callback style
+            test(end);
+          } else {
+            // run to get a promise...
+            let result = test();
+            if (result instanceof Promise) {
+              // if it's a promise, resolve later
+              result.then(end).catch(end);
+            } else {
+              // if not, then resolve manually
+              end();
+            }
+          }
+        /*} catch (exc) {
+          end(exc);
+        }
+      });*/
     });
   }
 

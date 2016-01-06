@@ -1,6 +1,6 @@
 'use strict';
 
-const SpecBase = require(`./base`);
+const Base = require(`./base`);
 const chai = require(`chai`);
 const request = require(`request`);
 const Joi = require(`joi`);
@@ -15,7 +15,7 @@ chai.config.truncateThreshold = 0;
  * Integration scenario that performs an http request on a distant server
  * @class
  */
-module.exports = class RequestSpec extends SpecBase {
+module.exports = class Request extends Base {
 
   /**
    * @returns {Joi.object} Schema used to validate fixtures
@@ -28,7 +28,7 @@ module.exports = class RequestSpec extends SpecBase {
       host: string().required().regex(/^https?:\/\//),
       url: string().required().min(1),
       code: number().required()
-    });
+    }).unknown(true);
   }
 
   /**

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A simple-yet-customizable integration test tool",
   "bin": {
-    "3loc": "src/cli.js"
+    "run3loc": "src/cli.js"
   },
   "scripts": {
     "test": "gulp test"
@@ -15,6 +15,7 @@
     "chalk": "^1.1.1",
     "commander": "^2.9.0",
     "csv-parse": "^1.0.1",
+    "hapi": "^12.0.0",
     "joi": "^7.0.1",
     "mocha": "^2.3.4",
     "moment": "^2.10.6",
