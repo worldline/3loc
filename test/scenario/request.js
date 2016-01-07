@@ -129,12 +129,12 @@ describe(`Request Scenario`, () => {
         host,
         url,
         code: 200,
-        xsdStr: `<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"><xs:element name="person">`
+        xsdStr: `coucou`
       }).run().
         catch(err => {
           expect(err).to.exist;
           expect(err).to.be.an.instanceOf(Error);
-          expect(err.message).to.include(`Closing tag without opener`);
+          expect(err.message).to.include(`Start tag expected`);
           done();
         }).
         catch(done);
@@ -362,8 +362,7 @@ describe(`Request Scenario`, () => {
 
     it(`should validates server request against XSD`, () => {
       app.get(url, (req, res) => {
-        res.end(`
-        <?xml version="1.0" encoding="UTF-8"?>
+        res.end(`<?xml version="1.0" encoding="UTF-8"?>
         <person>
           <first-name>John</first-name>
           <last-name>Smith</last-name>
@@ -374,7 +373,7 @@ describe(`Request Scenario`, () => {
         host,
         url,
         code: 200,
-        xsdSrc: `<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        xsdStr: `<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
         <xs:element name="person">
           <xs:complexType>
             <xs:sequence>
@@ -384,6 +383,23 @@ describe(`Request Scenario`, () => {
           </xs:complexType>
         </xs:element>
       </xs:schema>`
+      }).run();
+    });
+
+    it(`should validates server request against XSD from file`, () => {
+      app.get(url, (req, res) => {
+        res.end(`<?xml version="1.0" encoding="UTF-8"?>
+        <person>
+          <first-name>John</first-name>
+          <last-name>Smith</last-name>
+        </person>`);
+      });
+
+      return new Request(`POST templated text file`, {
+        host,
+        url,
+        code: 200,
+        xsd: path.resolve(`test`, `fixtures`, `person.xsd`)
       }).run();
     });
   });

@@ -56,10 +56,10 @@ const compileTemplate = (template, context) =>
  * @param {String} xsd - XSD content
  * @return {Promise<Object>} fullfilled with the XSD object, or nothing if no xsd provided
  */
-const compileXSD = (xsd) =>
+const compileXSD = xsd =>
   new Promise((resolve, reject) => {
     // no template: do not fail
-    if (!template) {
+    if (!xsd) {
       return resolve();
     }
     try {
@@ -136,7 +136,7 @@ module.exports = class Request extends Base {
       let loadXsd = this.fixtures.xsd ? loadFromFile(this.fixtures.xsd) : Promise.resolve(this.fixtures.xsdStr);
       return loadTpl.
         then(content => compileTemplate(content, this.fixtures)).
-        then(body => loadXsd.then(xsd =>
+        then(body => loadXsd.then(compileXSD).then(xsd =>
           new Promise(resolve =>
             request({
               method: this.fixtures.method || `GET`,
