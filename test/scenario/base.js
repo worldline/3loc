@@ -15,15 +15,13 @@ class CallbackScenario extends Base {
     });
   }
 
-  generate() {
-    return done => {
-      setTimeout(() => {
-        if (this.fixtures.raised && !this.fixtures.works) {
-          throw new Error(`not working !`);
-        }
-        done(this.fixtures.works ? null : new Error(`not working !`));
-      }, 0);
-    };
+  test(done) {
+    setTimeout(() => {
+      if (this.fixtures.raised && !this.fixtures.works) {
+        throw new Error(`not working !`);
+      }
+      done(this.fixtures.works ? null : new Error(`not working !`));
+    }, 0);
   }
 }
 
@@ -37,8 +35,8 @@ class PromiseScenario extends Base {
     });
   }
 
-  generate() {
-    return () => new Promise((resolve, reject) => {
+  test() {
+    return new Promise((resolve, reject) => {
       if (this.fixtures.raised && this.fixtures.fails) {
         throw new Error(`fails !`);
       }
@@ -60,12 +58,10 @@ class SynchronousScenario extends Base {
     });
   }
 
-  generate() {
-    return () => {
-      if (this.fixtures.errored) {
-        throw new Error(`error !`);
-      }
-    };
+  test() {
+    if (this.fixtures.errored) {
+      throw new Error(`error !`);
+    }
   }
 }
 
@@ -87,8 +83,8 @@ class ComplexScenario extends Base {
     this.test3 = new CallbackScenario(name, {works: fixtures.works, raised: fixtures.raised});
   }
 
-  generate() {
-    return () => Promise.all([this.test2.run(), this.test1.run()]).then(this.test3.run.bind(this.test3));
+  test() {
+    return Promise.all([this.test2.run(), this.test1.run()]).then(this.test3.run.bind(this.test3));
   }
 }
 
@@ -108,11 +104,11 @@ describe(`Base scenario`, () => {
     expect(scenario).to.have.property(`fixtures`).that.deep.equals(fixtures);
   });
 
-  it(`should have an empty generate method`, () => {
-    let test = new Base(`test`, {}).generate();
-    expect(test).to.be.an.instanceOf(Function);
-    expect(test).to.have.lengthOf(0);
-    expect(test).to.throw(/not implemented/);
+  it(`should have an empty test method`, () => {
+    let scenario = new Base(`test`, {});
+    expect(scenario.test).to.be.an.instanceOf(Function);
+    expect(scenario.test).to.have.lengthOf(0);
+    expect(scenario.test).to.throw(/not implemented/);
   });
 
   it(`should be ran`, done => {

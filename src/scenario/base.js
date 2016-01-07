@@ -46,7 +46,6 @@ module.exports = class Base {
    * @returns {Promise} fullfilled when scenario is done.
    */
   run() {
-    const test = this.generate();
     return new Promise((resolve, reject) => {
       // previous uncaught exception handlers
       let listeners = process.listeners(`uncaughtException`);
@@ -71,12 +70,12 @@ module.exports = class Base {
       process.on(`uncaughtException`, end);
 
       try {
-        if (test.length === 1) {
+        if (this.test.length === 1) {
           // callback style
-          test(end);
+          this.test(end);
         } else {
           // run to get a promise...
-          let result = test();
+          let result = this.test();
           if (result instanceof Promise) {
             // if it's a promise, resolve later
             result.then(res => end(null, res)).catch(end);
@@ -93,22 +92,18 @@ module.exports = class Base {
 
   /**
    * @private
-   * Returns a function that, when executed, will performs the test.
+   * Performs the test.
    * Contains any code needed by the scenario.
    *
-   * The generated function prototype can have 3 flavours:
+   * This function can have 3 different prototypes:
    * - void: function(): synchrnous, no parameters, no return
    * - void: function(cb): asynchronous, invoke cb when finished, with optional error as single parameter.
    * - Promise: function(): asynchronous, returns a promise fullfilled when finished (or errored)
    *
    * In any case, thrown exceptions (in case of failing assertions) will be caught using domains,
    * and lead to test failure
-   *
-   * @return {Function} the test function
    */
-  generate() {
-    return () => {
-      throw new Error(`generateTest() not implemented for SpecBase`);
-    };
+  test() {
+    throw new Error(`generateTest() not implemented for SpecBase`);
   }
 };

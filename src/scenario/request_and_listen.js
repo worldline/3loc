@@ -30,29 +30,31 @@ module.exports = class RequestAndListen extends Base {
   }
 
   /**
-   * Returns the test that makes the HTTP request and validates response
-   *
-   * @return {Function} the test function.
+   * - start a server
+   * - sends an HTTP request
+   * - validates its response
+   * - awaits for a request on server and validates it
+   * - sends a given response
+   * @param {Function} done - invoked when the scenario is complete,
+   * with an optionnal Error as first argument
    */
-  generate() {
-    return done => {
-      const app = express();
-      let server;
+  test(done) {
+    const app = express();
+    let server;
 
-      const end = err => {
-        server.close(() => done(err));
-      };
-
-      app.get(`/`, (req, res) => {
-        // TODO validate request
-        res.end();
-        end();
-      });
-
-      server = app.listen(this.fixtures.listeningPort, () => {
-        new Request(`${this.name} - request`, this.fixtures).run().catch(end);
-      });
-      server.on(`error`, end);
+    const end = err => {
+      server.close(() => done(err));
     };
+
+    app.get(`/`, (req, res) => {
+      // TODO validate request
+      res.end();
+      end();
+    });
+
+    server = app.listen(this.fixtures.listeningPort, () => {
+      new Request(`${this.name} - request`, this.fixtures).run().catch(end);
+    });
+    server.on(`error`, end);
   }
 };

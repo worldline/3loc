@@ -94,6 +94,13 @@ ${xml.validationErrors.map(err => err.message).join(`\n`)}`));
 
 /**
  * Integration scenario that performs an http request on a distant server
+ * You can provide the request body as a file (or string), with optionnal Mustache templating
+ * (Mustache data are the scenario's fixtures).
+ *
+ * HTTP response status is checked, and you can also provides an XSD (as a file or a string)
+ * for validation. In that case, the returned response is parsed with libXML.js as a Document
+ * object.
+ *
  * @class
  */
 module.exports = class Request extends Base {
@@ -126,35 +133,32 @@ module.exports = class Request extends Base {
   }
 
   /**
-   * Returns the test that makes the HTTP request and validates response
-   *
-   * @return {Function} the test function.
+   * Makes the HTTP request and validates response
+   * @return {Promise<Object>} fullfilled with the parsed response (String or libXML.js's Document)
    */
-  generate() {
-    return () => {
-      let loadTpl = this.fixtures.body ? loadFromFile(this.fixtures.body) : Promise.resolve(this.fixtures.bodyStr);
-      let loadXsd = this.fixtures.xsd ? loadFromFile(this.fixtures.xsd) : Promise.resolve(this.fixtures.xsdStr);
-      return loadTpl.
-        then(content => compileTemplate(content, this.fixtures)).
-        then(body => loadXsd.then(compileXSD).then(xsd =>
-          new Promise(resolve =>
-            request({
-              method: this.fixtures.method || `GET`,
-              url: this.fixtures.host + this.fixtures.url,
-              followRedirect: false,
-              headers: {
-                'Content-Type': this.fixtures.contentType || `text/plain`
-              },
-              body
-            }, (err, resp, parsedBody) => {
-              expect(err, `Unexpected error`).not.to.exist;
-              expect(resp, `Unexpected HTTP status code`).to.have.property(`statusCode`).that.equals(this.fixtures.code);
-              resolve(parsedBody);
-            })
-          ).
-          // XML validation if needed
-          then(xml => validateAgainstXSD(xml, xsd))
-        ));
-    };
+  test() {
+    let loadTpl = this.fixtures.body ? loadFromFile(this.fixtures.body) : Promise.resolve(this.fixtures.bodyStr);
+    let loadXsd = this.fixtures.xsd ? loadFromFile(this.fixtures.xsd) : Promise.resolve(this.fixtures.xsdStr);
+    return loadTpl.
+      then(content => compileTemplate(content, this.fixtures)).
+      then(body => loadXsd.then(compileXSD).then(xsd =>
+        new Promise(resolve =>
+          request({
+            method: this.fixtures.method || `GET`,
+            url: this.fixtures.host + this.fixtures.url,
+            followRedirect: false,
+            headers: {
+              'Content-Type': this.fixtures.contentType || `text/plain`
+            },
+            body
+          }, (err, resp, parsedBody) => {
+            expect(err, `Unexpected error`).not.to.exist;
+            expect(resp, `Unexpected HTTP status code`).to.have.property(`statusCode`).that.equals(this.fixtures.code);
+            resolve(parsedBody);
+          })
+        ).
+        // XML validation if needed
+        then(xml => validateAgainstXSD(xml, xsd))
+      ));
   }
 };

@@ -19,7 +19,7 @@ const toMocha = (scenarii, suiteName) => {
   const suite = new Suite(suiteName);
   // and declares all specified tests
   for (let scenario of scenarii) {
-    suite.addTest(new Test(scenario.name, scenario.generate()));
+    suite.addTest(new Test(scenario.name, scenario.run));
   }
   return suite;
 };
