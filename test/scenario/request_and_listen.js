@@ -77,7 +77,7 @@ describe(`Request & Listen Scenario`, () => {
         });
       });
 
-      new RequestAndListen(`test 1`, {
+      new RequestAndListen(`ping pong`, {
         host,
         url,
         code: 200,
@@ -90,7 +90,7 @@ describe(`Request & Listen Scenario`, () => {
         res.status(204).end();
       });
 
-      new RequestAndListen(`test 1`, {
+      new RequestAndListen(`unexpected status`, {
         host,
         url,
         code: 200,

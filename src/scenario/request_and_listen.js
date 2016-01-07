@@ -19,11 +19,9 @@ const number = Joi.number;
 module.exports = class RequestAndListen extends Base {
 
   /**
-   * @returns {Joi.object} Schema used to validate fixtures
-   * - {String} host - requested server url (protocol, host and port)
-   * - {String} url - requested url (with url-encoded parameters)
+   * @returns {Joi.object} Schema used to validate fixtures.
+   * An extension of Request's schema plus:
    * - {Number} listeningPort - local port on which the server will listen
-   * - {Number} code - expected Http code
    */
   static get schema() {
     return Request.schema.keys({
