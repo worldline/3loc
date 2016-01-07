@@ -52,7 +52,7 @@ module.exports = class Base {
       let listeners = process.listeners(`uncaughtException`);
 
       // common ending that rewire uncaught exception listeners before exiting
-      const end = err => {
+      const end = (err, result) => {
         process.removeListener(`uncaughtException`, end);
         if (listeners) {
           listeners.forEach(listener => process.on(`uncaughtException`, listener));
@@ -60,10 +60,9 @@ module.exports = class Base {
         }
 
         if (err) {
-          // console.log(`reject ${this.name} with error ${err}`);
           reject(err);
         } else {
-          resolve();
+          resolve(result);
         }
       };
 
@@ -80,7 +79,7 @@ module.exports = class Base {
           let result = test();
           if (result instanceof Promise) {
             // if it's a promise, resolve later
-            result.then(end).catch(end);
+            result.then(res => end(null, res)).catch(end);
           } else {
             // if not, then resolve manually
             end();

@@ -7,6 +7,8 @@ const fs = require(`fs`);
 const path = require(`path`);
 const Request = require(`../../src/scenario/request`);
 
+const randomInt = () => Math.floor(Math.random() * 10000);
+
 describe(`Request Scenario`, () => {
 
   let url = `/`;
@@ -57,7 +59,7 @@ describe(`Request Scenario`, () => {
 
   it(`should report unreachable errors`, done => {
     new Request(`unexpected status`, {
-      host: `http://localhost;1234`,
+      host: `http://localhost:1234`,
       url,
       code: 200
     }).run().
@@ -70,6 +72,53 @@ describe(`Request Scenario`, () => {
       catch(done);
   });
 
+  it(`should report missing body file`, done => {
+    new Request(`missing file`, {
+      host: `http://localhost:1234`,
+      url,
+      code: 200,
+      body: `unknown`
+    }).run().
+      catch(err => {
+        expect(err).to.exist;
+        expect(err).to.be.an.instanceOf(Error);
+        expect(err.message).to.include(`ENOENT`);
+        done();
+      }).
+      catch(done);
+  });
+
+  it(`should report errored body template`, done => {
+    new Request(`errored template`, {
+      host: `http://localhost:1234`,
+      url,
+      code: 200,
+      bodyStr: `hello {{/unknown}}`
+    }).run().
+      catch(err => {
+        expect(err).to.exist;
+        expect(err).to.be.an.instanceOf(Error);
+        expect(err.message).to.include(`Closing tag without opener`);
+        done();
+      }).
+      catch(done);
+  });
+
+  it(`should report errored XSD string`, done => {
+    new Request(`errored XSD`, {
+      host: `http://localhost:1234`,
+      url,
+      code: 200,
+      xsdStr: `coucou`
+    }).run().
+      catch(err => {
+        expect(err).to.exist;
+        expect(err).to.be.an.instanceOf(Error);
+        expect(err.message).to.include(`Start tag expected`);
+        done();
+      }).
+      catch(done);
+  });
 
   describe(`given a running server`, () => {
 
@@ -91,54 +140,6 @@ describe(`Request Scenario`, () => {
     });
 
     afterEach(done => server.close(done));
-
-    it(`should report missing body file`, done => {
-      new Request(`mising file`, {
-        host,
-        url,
-        code: 200,
-        body: `unknown`
-      }).run().
-        catch(err => {
-          expect(err).to.exist;
-          expect(err).to.be.an.instanceOf(Error);
-          expect(err.message).to.include(`ENOENT`);
-          done();
-        }).
-        catch(done);
-    });
-
-    it(`should report errored body template`, done => {
-      new Request(`errored template`, {
-        host,
-        url,
-        code: 200,
-        bodyStr: `hello {{/unknown}}`
-      }).run().
-        catch(err => {
-          expect(err).to.exist;
-          expect(err).to.be.an.instanceOf(Error);
-          expect(err.message).to.include(`Closing tag without opener`);
-          done();
-        }).
-        catch(done);
-    });
-
-    it(`should report errored XSD string`, done => {
-      new Request(`errored XSD`, {
-        host,
-        url,
-        code: 200,
-        xsdStr: `coucou`
-      }).run().
-        catch(err => {
-          expect(err).to.exist;
-          expect(err).to.be.an.instanceOf(Error);
-          expect(err.message).to.include(`Start tag expected`);
-          done();
-        }).
-        catch(done);
-    });
 
     it(`should report unexpected request error`, done => {
       app.get(url, (req, res) => {
@@ -193,12 +194,11 @@ describe(`Request Scenario`, () => {
     });
 
     it(`should set request's HTTP method`, () => {
-
       app.put(url, (req, res) => {
         res.end();
       });
 
-      return new Request(`empty PUT`, {
+      new Request(`empty PUT`, {
         host,
         url,
         code: 200,
@@ -206,17 +206,23 @@ describe(`Request Scenario`, () => {
       }).run();
     });
 
-    it(`should request a given url and enforce response`, () => {
+    it(`should request a given url and get response content`, done => {
+      const result = `bye ${randomInt()}`;
+
       app.get(url, (req, res) => {
-        // empty response
-        res.end();
+        res.end(result);
       });
 
-      return new Request(`no content`, {
+      return new Request(`random content`, {
         host,
         url,
         code: 200
-      }).run();
+      }).run().
+        then(resp => {
+          expect(resp).to.equals(result);
+          done();
+        }).
+        catch(done);
     });
 
     it(`should request with a given body string as text`, done => {
@@ -364,8 +370,8 @@ describe(`Request Scenario`, () => {
       app.get(url, (req, res) => {
         res.end(`<?xml version="1.0" encoding="UTF-8"?>
         <person>
-          <first-name>John</first-name>
-          <last-name>Smith</last-name>
+          <firstname>John</firstname>
+          <lastname>Smith</lastname>
         </person>`);
       });
 
@@ -377,8 +383,8 @@ describe(`Request Scenario`, () => {
         <xs:element name="person">
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="first-name" type="xs:string"/>
-              <xs:element name="last-name" type="xs:string"/>
+              <xs:element name="firstname" type="xs:string"/>
+              <xs:element name="lastname" type="xs:string"/>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
@@ -386,12 +392,12 @@ describe(`Request Scenario`, () => {
       }).run();
     });
 
-    it(`should validates server request against XSD from file`, () => {
+    it(`should validates server request against XSD from file`, done => {
       app.get(url, (req, res) => {
         res.end(`<?xml version="1.0" encoding="UTF-8"?>
         <person>
-          <first-name>John</first-name>
-          <last-name>Smith</last-name>
+          <firstname>John</firstname>
+          <lastname>Smith</lastname>
         </person>`);
       });
 
@@ -400,7 +406,18 @@ describe(`Request Scenario`, () => {
         url,
         code: 200,
         xsd: path.resolve(`test`, `fixtures`, `person.xsd`)
-      }).run();
+      }).run().
+        then(xml => {
+          expect(xml).to.exist;
+          let node = xml.get(`//person/firstname`);
+          expect(node).to.exist;
+          expect(node.text()).to.equals(`John`);
+          node = xml.get(`//person/lastname`);
+          expect(node).to.exist;
+          expect(node.text()).to.equals(`Smith`);
+          done();
+        }).
+        catch(done);
     });
   });
 

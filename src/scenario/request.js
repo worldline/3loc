@@ -79,13 +79,13 @@ const validateAgainstXSD = (xml, xsd) =>
   new Promise((resolve, reject) => {
     // no xsd provided: no validation, but do not fail
     if (!xsd) {
-      return resolve();
+      return resolve(xml);
     }
     // parse and turns string to objects
     xml = libxml.parseXmlString(xml);
     const isValid = xml.validate(xsd);
     if (isValid) {
-      return resolve();
+      return resolve(xml);
     }
     // errors are directly embedded in xml object
     reject(new Error(`Invalid XML response:
