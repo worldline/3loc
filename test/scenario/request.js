@@ -124,6 +124,22 @@ describe(`Request Scenario`, () => {
         catch(done);
     });
 
+    it(`should report errored XSD string`, done => {
+      new Request(`errored XSD`, {
+        host,
+        url,
+        code: 200,
+        xsdStr: `<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"><xs:element name="person">`
+      }).run().
+        catch(err => {
+          expect(err).to.exist;
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.include(`Closing tag without opener`);
+          done();
+        }).
+        catch(done);
+    });
+
     it(`should report unexpected request error`, done => {
       app.get(url, (req, res) => {
         // return unexpected status
@@ -139,6 +155,38 @@ describe(`Request Scenario`, () => {
           expect(err).to.exist;
           expect(err).to.be.an.instanceOf(Error);
           expect(err.message).to.include(`400`);
+          done();
+        }).
+        catch(done);
+    });
+
+    it(`should report XSD validation errors`, done => {
+      app.get(url, (req, res) => {
+        res.end(`<?xml version="1.0" encoding="UTF-8"?>
+        <person>
+          <toto>Smith</toto>
+        </person>`);
+      });
+
+      new Request(`POST templated text file`, {
+        host,
+        url,
+        code: 200,
+        xsdStr: `<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <xs:element name="person">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="first-name" type="xs:string"/>
+              <xs:element name="last-name" type="xs:string"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:schema>`
+      }).run().
+        catch(err => {
+          expect(err).to.exist;
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.include(`element is not expected`);
           done();
         }).
         catch(done);
@@ -312,6 +360,32 @@ describe(`Request Scenario`, () => {
       }).run().catch(done);
     });
 
+    it(`should validates server request against XSD`, () => {
+      app.get(url, (req, res) => {
+        res.end(`
+        <?xml version="1.0" encoding="UTF-8"?>
+        <person>
+          <first-name>John</first-name>
+          <last-name>Smith</last-name>
+        </person>`);
+      });
+
+      return new Request(`POST templated text file`, {
+        host,
+        url,
+        code: 200,
+        xsdSrc: `<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <xs:element name="person">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="first-name" type="xs:string"/>
+              <xs:element name="last-name" type="xs:string"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:schema>`
+      }).run();
+    });
   });
 
 });
