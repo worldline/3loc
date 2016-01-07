@@ -6,8 +6,7 @@ const bodyParser = require(`body-parser`);
 const fs = require(`fs`);
 const path = require(`path`);
 const Request = require(`../../src/scenario/request`);
-
-const randomInt = () => Math.floor(Math.random() * 10000);
+const utils = require(`../utils/test-utils`);
 
 describe(`Request Scenario`, () => {
 
@@ -207,7 +206,7 @@ describe(`Request Scenario`, () => {
     });
 
     it(`should request a given url and get response content`, done => {
-      const result = `bye ${randomInt()}`;
+      const result = `bye ${utils.randomInt()}`;
 
       app.get(url, (req, res) => {
         res.end(result);

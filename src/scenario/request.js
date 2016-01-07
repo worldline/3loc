@@ -4,93 +4,15 @@ const Base = require(`./base`);
 const chai = require(`chai`);
 const request = require(`request`);
 const Joi = require(`joi`);
-const Hogan = require(`hogan`);
-const fs = require(`fs`);
-const path = require(`path`);
-const libxml = require(`libxmljs`);
+const xmlUtils = require(`../utils/xml`);
+const fileUtils = require(`../utils/file`);
+
 const object = Joi.object;
 const string = Joi.string;
 const number = Joi.number;
 const expect = chai.expect;
 
 chai.config.truncateThreshold = 0;
-
-/**
- * Loads body from a given file
- * @param {String} file - relative or absolute path to file
- * @return {Promise<String>} fullfilled with file's content
- */
-const loadFromFile = file =>
-  new Promise((resolve, reject) => {
-    fs.readFile(path.resolve(file), 'utf8', (err, content) => {
-      if (err) {
-        return reject(new Error(`Failed to load file: ${err.message}`));
-      }
-      resolve(content);
-    });
-  });
-
-/**
- * Make a body by parsing template in a given context and making needed replacements.
- * Uses Mustache templating with Hogan
- * @param {String} template - template content
- * @param {Object} context - context data, used for template filling.
- * @return {Promise<String>} fullfilled with actual body, or nothing if no template provided
- */
-const compileTemplate = (template, context) =>
-  new Promise((resolve, reject) => {
-    // no template: do not fail
-    if (!template) {
-      return resolve();
-    }
-    try {
-      resolve(Hogan.compile(template).render(context));
-    } catch (err) {
-      reject(new Error(`Failed to compile mustache template: ${err.message}`));
-    }
-  });
-
-/**
- * Parse a XSD string into a enriched XSD object for further validation.
- * Uses libXML
- * @param {String} xsd - XSD content
- * @return {Promise<Object>} fullfilled with the XSD object, or nothing if no xsd provided
- */
-const compileXSD = xsd =>
-  new Promise((resolve, reject) => {
-    // no template: do not fail
-    if (!xsd) {
-      return resolve();
-    }
-    try {
-      resolve(libxml.parseXmlString(xsd));
-    } catch (err) {
-      reject(new Error(`Failed to compile XSD: ${err.message}`));
-    }
-  });
-
-/**
- * Validates the incoming XML content against the given XSD
- * @param {String} xml - validated content
- * @param {Object} xsd - XSD object
- * @return {Promise} fullfilled if xml is valid
- */
-const validateAgainstXSD = (xml, xsd) =>
-  new Promise((resolve, reject) => {
-    // no xsd provided: no validation, but do not fail
-    if (!xsd) {
-      return resolve(xml);
-    }
-    // parse and turns string to objects
-    xml = libxml.parseXmlString(xml);
-    const isValid = xml.validate(xsd);
-    if (isValid) {
-      return resolve(xml);
-    }
-    // errors are directly embedded in xml object
-    reject(new Error(`Invalid XML response:
-${xml.validationErrors.map(err => err.message).join(`\n`)}`));
-  });
 
 /**
  * Integration scenario that performs an http request on a distant server
@@ -137,11 +59,11 @@ module.exports = class Request extends Base {
    * @return {Promise<Object>} fullfilled with the parsed response (String or libXML.js's Document)
    */
   test() {
-    let loadTpl = this.fixtures.body ? loadFromFile(this.fixtures.body) : Promise.resolve(this.fixtures.bodyStr);
-    let loadXsd = this.fixtures.xsd ? loadFromFile(this.fixtures.xsd) : Promise.resolve(this.fixtures.xsdStr);
+    let loadTpl = this.fixtures.body ? fileUtils.load(this.fixtures.body) : Promise.resolve(this.fixtures.bodyStr);
+    let loadXsd = this.fixtures.xsd ? fileUtils.load(this.fixtures.xsd) : Promise.resolve(this.fixtures.xsdStr);
     return loadTpl.
-      then(content => compileTemplate(content, this.fixtures)).
-      then(body => loadXsd.then(compileXSD).then(xsd =>
+      then(content => fileUtils.compile(content, this.fixtures)).
+      then(body => loadXsd.then(xmlUtils.compile).then(xsd =>
         new Promise(resolve =>
           request({
             method: this.fixtures.method || `GET`,
@@ -158,7 +80,7 @@ module.exports = class Request extends Base {
           })
         ).
         // XML validation if needed
-        then(xml => validateAgainstXSD(xml, xsd))
+        then(xml => xmlUtils.validate(xml, xsd))
       ));
   }
 };

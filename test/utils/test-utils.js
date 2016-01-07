@@ -41,3 +41,9 @@ exports.shutdownLoggers = names => {
     });
   });
 };
+
+/**
+ * Generates a random integer in interval [0..100000[
+ * @return {Number} a random integer
+ */
+exports.randomInt = () => Math.floor(Math.random() * 10000);

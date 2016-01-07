@@ -100,7 +100,7 @@ module.exports = class Base {
    * - void: function(cb): asynchronous, invoke cb when finished, with optional error as single parameter.
    * - Promise: function(): asynchronous, returns a promise fullfilled when finished (or errored)
    *
-   * In any case, thrown exceptions (in case of failing assertions) will be caught using domains,
+   * In any case, thrown exceptions (in case of failing assertions) will be caught,
    * and lead to test failure
    */
   test() {
