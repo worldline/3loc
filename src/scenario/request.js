@@ -4,7 +4,7 @@ const Base = require(`./base`);
 const chai = require(`chai`);
 const request = require(`request`);
 const Joi = require(`joi`);
-const compiler = require(`hogan`);
+const Hogan = require(`hogan`);
 const fs = require(`fs`);
 const path = require(`path`);
 const object = Joi.object;
@@ -36,9 +36,17 @@ const loadFromFile = file =>
  * @param {Object} context - context data, used for template filling.
  * @return {Promise<String>} promised resolved with actual body
  */
-const compileTemplate = (template, context) => {
-  return new Promise(resolve => resolve(template));
-};
+const compileTemplate = (template, context) =>
+  new Promise((resolve, reject) => {
+    if (!template) {
+      return resolve(template);
+    }
+    try {
+      resolve(Hogan.compile(template).render(context));
+    } catch (err) {
+      reject(new Error(`Failed to compile mustache template: ${err.message}`));
+    }
+  });
 
 /**
  * Integration scenario that performs an http request on a distant server
@@ -88,7 +96,7 @@ module.exports = class Request extends Base {
             },
             body
           }, (err, resp) => {
-            expect(err, `Unexpected network error`).not.to.exist;
+            expect(err, `Unexpected error`).not.to.exist;
             expect(resp, `Unexpected HTTP status code`).to.have.property(`statusCode`).that.equals(this.fixtures.code);
             // TODO response validation
             resolve();

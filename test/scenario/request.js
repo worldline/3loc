@@ -92,6 +92,85 @@ describe(`Request Scenario`, () => {
 
     afterEach(done => server.close(done));
 
+    it(`should report missing body file`, done => {
+      new Request(`mising file`, {
+        host,
+        url,
+        code: 200,
+        body: `unknown`
+      }).run().
+        catch(err => {
+          expect(err).to.exist;
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.include(`ENOENT`);
+          done();
+        }).
+        catch(done);
+    });
+
+    it(`should report errored body template`, done => {
+      new Request(`errored template`, {
+        host,
+        url,
+        code: 200,
+        bodyStr: `hello {{/unknown}}`
+      }).run().
+        catch(err => {
+          expect(err).to.exist;
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.include(`Closing tag without opener`);
+          done();
+        }).
+        catch(done);
+    });
+
+    it(`should report unexpected request error`, done => {
+      app.get(url, (req, res) => {
+        // return unexpected status
+        res.status(400).end();
+      });
+
+      new Request(`unexpected status`, {
+        host,
+        url,
+        code: 200
+      }).run().
+        catch(err => {
+          expect(err).to.exist;
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.include(`400`);
+          done();
+        }).
+        catch(done);
+    });
+
+    it(`should set request's HTTP method`, () => {
+
+      app.put(url, (req, res) => {
+        res.end();
+      });
+
+      return new Request(`empty PUT`, {
+        host,
+        url,
+        code: 200,
+        method: `PUT`
+      }).run();
+    });
+
+    it(`should request a given url and enforce response`, () => {
+      app.get(url, (req, res) => {
+        // empty response
+        res.end();
+      });
+
+      return new Request(`no content`, {
+        host,
+        url,
+        code: 200
+      }).run();
+    });
+
     it(`should request with a given body string as text`, done => {
       const bodyStr = `bonjour`;
 
@@ -188,68 +267,51 @@ describe(`Request Scenario`, () => {
       });
     });
 
-    it(`should set request's HTTP method`, () => {
+    it(`should performs templating in body string`, done => {
+      const user = {name: `Julie`};
 
-      app.put(url, (req, res) => {
+      app.post(url, (req, res) => {
         res.end();
+        process.nextTick(() => {
+          expect(req.headers).to.have.property(`content-type`).that.equals(`text/plain`);
+          expect(req.body).to.equals(`bonjour ${user.name}`);
+          done();
+        });
       });
 
-      return new Request(`empty PUT`, {
+      new Request(`POST templated text`, {
         host,
         url,
         code: 200,
-        method: `PUT`
-      }).run();
+        method: `POST`,
+        bodyStr: `bonjour {{user.name}}`,
+        user
+      }).run().catch(done);
     });
 
-    it(`should request a given url and enforce response`, () => {
-      app.get(url, (req, res) => {
-        // empty response
+    it(`should performs templating in body file`, done => {
+      const user = {name: `Jules`};
+
+      const body = path.resolve(`test`, `fixtures`, `req3.txt`);
+      app.post(url, (req, res) => {
         res.end();
+        process.nextTick(() => {
+          expect(req.headers).to.have.property(`content-type`).that.equals(`text/plain`);
+          expect(req.body).to.include(user.name);
+          done();
+        });
       });
 
-      return new Request(`no content`, {
-        host,
-        url,
-        code: 200
-      }).run();
-    });
-
-    it(`should report missing body file`, done => {
-      new Request(`misisng file`, {
+      new Request(`POST templated text file`, {
         host,
         url,
         code: 200,
-        body: `unknown`
-      }).run().
-        catch(err => {
-          expect(err).to.exist;
-          expect(err).to.be.an.instanceOf(Error);
-          expect(err.message).to.include(`ENOENT`);
-          done();
-        }).
-        catch(done);
+        method: `POST`,
+        body,
+        user
+      }).run().catch(done);
     });
 
-    it(`should report unexpected request error`, done => {
-      app.get(url, (req, res) => {
-        // return unexpected status
-        res.status(400).end();
-      });
-
-      new Request(`unexpected status`, {
-        host,
-        url,
-        code: 200
-      }).run().
-        catch(err => {
-          expect(err).to.exist;
-          expect(err).to.be.an.instanceOf(Error);
-          expect(err.message).to.include(`400`);
-          done();
-        }).
-        catch(done);
-    });
   });
 
 });
