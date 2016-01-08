@@ -1,8 +1,13 @@
 # TODO list
 
-0. complex scenario example: req 1 body, req 1 response, req 2 body, req 2 response
-0. request scenario: header, query parameter and in fixtures.
+0. request scenario: header in fixtures.
 0. request scenario: response validation (Json and text)
 0. base scenario: timeout
-0. share code between tests (server init)
-0. document spec authoring
+0. fixtures validation: display message better
+0. refactor scenario authoring
+
+# TODO projet
+
+0. YAML descriptor
+0. make Daimler specific scenario with CBP mocking
+

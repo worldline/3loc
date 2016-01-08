@@ -4,6 +4,7 @@ const fs = require(`fs`);
 const resolvePath = require(`path`).resolve;
 const basename = require(`path`).basename;
 const parseCsv = require(`csv-parse`);
+const utils = require(`../utils/object`);
 
 const parserOpts = {
   /* eslint camelcase: 0 */
@@ -12,6 +13,36 @@ const parserOpts = {
   columns: true,
   delimiter: `;`,
   skip_empty_lines: true
+};
+
+
+/**
+ * Try to smartly cast incoming values.
+ * String containing 'true' and 'false' (case insensitive, leading/trailing spaces allowed)
+ * will be cast to booleans
+ * @param {Any} value - incoming value
+ * @return {String|Boolean} casted value
+ */
+const cast = value => {
+  if (utils.getType(value) === `string`) {
+    if (value.trim().toLowerCase() === `true`) {
+      return true;
+    } else if (value.trim().toLowerCase() === `false`) {
+      return false;
+    }
+  }
+  return value;
+};
+
+/**
+ * Takes the flatten fixtures and turns them into a object tree
+ * @param {Object} fixtures - flatten fixtures
+ * @return {Object} treeish fixtures
+ */
+const unflatten = fixtures => {
+  const result = {};
+  Object.keys(fixtures).forEach(prop => utils.setProp(result, prop, cast(fixtures[prop])));
+  return result;
 };
 
 /**
@@ -32,7 +63,7 @@ const parseFile = (Scenario, content) =>
       resolve(fixtures.map(fixture => {
         let name = fixture[Scenario.nameProperty] || `test ${++i}`;
         delete fixture.name;
-        return new Scenario(name, fixture);
+        return new Scenario(name, unflatten(fixture));
       }));
     })
   );

@@ -16,24 +16,26 @@ describe(`Request & Listen Scenario`, () => {
     // Some inherited fields
     expect(() => new RequestAndListen(name, {
       req: {
-        url: '/',
+        url: `/`,
         code: 200
       }, lsn: {}
     })).to.throw(/"host" is required/);
     expect(() => new RequestAndListen(name, {
       req: {
-        host: 'http://toto',
-        url: '/'
+        host: `http://toto`,
+        url: `/`
       }, lsn: {}
     })).to.throw(/"code" is required/);
 
-    // listeningPort
+    // listening port
     expect(() => new RequestAndListen(name, {
       req: {
         host: `http://toto`,
         url: `/`,
         code: 200
-      }, lsn: {}
+      }, lsn: {
+        url: `/`
+      }
     })).to.throw(/"port" is required/);
     expect(() => new RequestAndListen(name, {
       req: {
@@ -41,18 +43,44 @@ describe(`Request & Listen Scenario`, () => {
         url: `/`,
         code: 200
       }, lsn: {
+        url: `/`,
         port: `coucou`
       }
     })).to.throw(/"port" must be a number/);
 
+    // url
+    expect(() => new RequestAndListen(name, {
+      req: {
+        host: `http://toto`,
+        url: `/`,
+        code: 200
+      }, lsn: {
+        port: 3000
+      }
+    })).to.throw(/"url" is required/);
+
+    // method
+    expect(() => new RequestAndListen(name, {
+      req: {
+        host: `http://toto`,
+        url: `/`,
+        code: 200
+      }, lsn: {
+        url: `/`,
+        port: 3000,
+        method: `TOTO`
+      }
+    })).to.throw(/"method" must be one of/);
+
     // resp and respStr
     expect(() => new RequestAndListen(name, {
       req: {
-        host: 'http://toto',
+        host: `http://toto`,
         url: '/',
         code: 200
       }, lsn: {
         port: 3000,
+        url: `/`,
         respStr: 'bonjour',
         resp: 'bonjour'
       }
@@ -61,15 +89,58 @@ describe(`Request & Listen Scenario`, () => {
     // xsd and xsdStr
     expect(() => new RequestAndListen(name, {
       req: {
-        host: 'http://toto',
-        url: '/',
+        host: `http://toto`,
+        url: `/`,
         code: 200
       }, lsn: {
         port: 3000,
+        url: `/`,
         xsdStr: 'bonjour',
         xsd: 'bonjour'
       }
     })).to.throw(/must not exist simultaneously/);
+  });
+
+  it(`should copy arbitrary keys to 'req' and 'lsn' fixtures`, done => {
+    const scenario = new RequestAndListen(`name`, {
+      req: {
+        host: `http://toto`,
+        url: `/`,
+        code: 200,
+        key2: `ko`
+      }, lsn: {
+        port: 3000,
+        url: `/`
+      }, key1: {
+        a: 10,
+        b: {
+          value: [true]
+        }
+      }, key2: `ok`
+    });
+
+    expect(scenario.fixtures.req).to.deep.equals({
+      host: 'http://toto',
+      url: '/',
+      code: 200,
+      key1: {
+        a: 10,
+        b: {
+          value: [true]
+        }
+      }, key2: `ok`
+    });
+    expect(scenario.fixtures.lsn).to.deep.equals({
+      port: 3000,
+      url: `/`,
+      key1: {
+        a: 10,
+        b: {
+          value: [true]
+        }
+      }, key2: `ok`
+    });
+    done();
   });
 
   describe(`given a running server`, () => {

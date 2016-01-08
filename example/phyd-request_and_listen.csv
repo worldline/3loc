@@ -1,0 +1,3 @@
+name;req.method;req.host;req.url;req.body;req.xsd;req.code;lsn.method;lsn.port;lsn.url;lsn.respStr;lsn.xsd;user_name
+First test;POST;http://localhost:4000;/trip;phyd-req.xml;phyd-message.xsd;200;POST;4001;/score;<msg>Pong from {{user_name}}</msg>;phyd-message.xsd;Sylvain
+Second test;POST;http://localhost:4000;/trip;phyd-req.xml;phyd-message.xsd;200;POST;4001;/score;<msg>Pong from {{user_name}}</msg>;phyd-message.xsd;Damien

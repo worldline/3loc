@@ -39,6 +39,23 @@ describe(`CSV Spec parser`, () => {
     });
   });
 
+  it(`should cast parsed values`, () => {
+    return parse(join(fixtures, `cast-base.csv`)).then(scenarii => {
+      expect(scenarii).to.have.lengthOf(1);
+      expect(scenarii[0].fixtures).to.have.property(`bool1`).that.is.true;
+      expect(scenarii[0].fixtures).to.have.property(`bool2`).that.is.false;
+      expect(scenarii[0].fixtures).to.have.property(`str`).that.equals(`a string`);
+      expect(scenarii[0].fixtures).to.have.property(`num`).that.equals(10.5);
+    });
+  });
+
+  it(`should unflatten and parse fixtures paths`, () => {
+    return parse(join(fixtures, `flatten-base.csv`)).then(scenarii => {
+      expect(scenarii).to.have.lengthOf(1);
+      expect(scenarii[0].fixtures).to.deep.equals({a: {b: {c: true, d: 10}}});
+    });
+  });
+
   it(`should fail on incorrect CSV`, () => {
     return parse(join(fixtures, `broken-base.csv`)).catch(err => {
       expect(err).to.have.property(`message`).that.match(/Quoted field not terminated/);

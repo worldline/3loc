@@ -27,7 +27,6 @@ module.exports = class Base {
 
   /**
    * Builds a scenario with a name and data fixture
-   *
    * @param {String} name - test's name
    * @param {Object} fixtures - test data fixtures
    */
@@ -42,7 +41,6 @@ module.exports = class Base {
 
   /**
    * Run the scenario, for example when using from another scenario.
-   *
    * @returns {Promise} fullfilled when scenario is done.
    */
   run() {

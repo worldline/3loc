@@ -1,6 +1,7 @@
 'use strict';
 
 const Base = require(`./base`);
+const _ = require(`lodash`);
 const chai = require(`chai`);
 const Request = require(`./request`);
 const express = require(`express`);
@@ -44,8 +45,8 @@ module.exports = class RequestAndListen extends Base {
       req: Request.schema,
       lsn: object().keys({
         port: number().required(),
-        // url: string().required(),
-        // method: string().required().valid(`GET`, `POST`, `PUT`, `HEAD`, `DELETE`),
+        url: string().required(),
+        method: string().valid(`GET`, `POST`, `PUT`, `HEAD`, `DELETE`),
         resp: string(),
         respStr: string(),
         xsd: string(),
@@ -53,7 +54,19 @@ module.exports = class RequestAndListen extends Base {
       }).unknown(true).
         nand(`resp`, `respStr`).
         nand(`xsd`, `xsdStr`)
-    });
+    }).unknown(true);
+  }
+
+  /**
+   * Builds a Request & Listen scenario
+   * @param {String} name - scenario's name
+   * @param {Object} fixtures - scenario data fixtures
+   */
+  constructor(name, fixtures) {
+    super(name, fixtures);
+    const arbitrary = _.omit(this.fixtures, `req`, `lsn`);
+    _.merge(this.fixtures.lsn, arbitrary);
+    _.merge(this.fixtures.req, arbitrary);
   }
 
   /**
@@ -65,9 +78,10 @@ module.exports = class RequestAndListen extends Base {
    * @return {Promise} fullfilled with the received request's body
    */
   test() {
-    let loadResp = this.fixtures.lsn.resp ? fileUtils.load(this.fixtures.lsn.resp) : Promise.resolve(this.fixtures.lsn.respStr);
-    let loadXsd = this.fixtures.lsn.xsd ? fileUtils.load(this.fixtures.lsn.xsd) : Promise.resolve(this.fixtures.lsn.xsdStr);
-    return loadResp.then(resp2 =>
+    const loadResp = this.fixtures.lsn.resp ? fileUtils.load(this.fixtures.lsn.resp) : Promise.resolve(this.fixtures.lsn.respStr);
+    const loadXsd = this.fixtures.lsn.xsd ? fileUtils.load(this.fixtures.lsn.xsd) : Promise.resolve(this.fixtures.lsn.xsdStr);
+    return loadResp.then(content => fileUtils.compile(content, this.fixtures.lsn)).
+      then(resp2 =>
       new Promise((resolve, reject) => {
         const app = express();
         let server;
@@ -91,8 +105,8 @@ module.exports = class RequestAndListen extends Base {
           loadXsd.then(xmlUtils.compile).
             then(xsd => {
               // validates request
-              expect(req.path).to.equals(this.fixtures.lsn.url);
-              expect(req.method).to.equals(this.fixtures.lsn.method);
+              expect(req.path, 'Unexpected url').to.equals(this.fixtures.lsn.url);
+              expect(req.method, 'Unexpected method').to.equals(this.fixtures.lsn.method || `GET`);
               return xmlUtils.validate(req.body, xsd);
             }).
             then(() => end(null)).
@@ -100,7 +114,7 @@ module.exports = class RequestAndListen extends Base {
         });
 
         server = app.listen(this.fixtures.lsn.port, () => {
-          new Request(`${this.name} - request 1`, this.fixtures.req).
+          new Request(`${this.name} - request`, this.fixtures.req).
             run().
             catch(end);
         });
