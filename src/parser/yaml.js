@@ -1,22 +1,57 @@
 'use strict';
 
 const fs = require(`fs`);
-const resolvePath = require(`path`).resolve;
-const basename = require(`path`).basename;
+const path = require(`path`);
 const yaml = require(`js-yaml`);
 const _ = require(`lodash`);
+const getType = require(`../utils/object`).getType;
+
+
+/**
+ * Creates a YAML schema extending js-yaml.DEFAULT_SAFE_SCHEMA,
+ * freely inspired from https://github.com/claylo/yaml-include,
+ * but with the support of relative file loading
+ *
+ * @param {String} root - absolute path from which all included file are relative
+ * @return {yaml.Schema} the creates Schema including custom inclusion type
+ * @see https://github.com/nodeca/js-yaml#safeload-string---options-
+ */
+const declareSchema = root => {
+  // early declare because of the circular nature or includeType/inclusionSchema
+  let inclusionSchema;
+
+  // A YAML custom type that SYNCHRONOUSLY loads external file content
+  const includeType = new yaml.Type(`tag:yaml.org,2002:inc/file`, {
+    kind: `scalar`,
+    resolve: data => getType(data) === 'string',
+    construct: data =>
+      yaml.safeLoad(fs.readFileSync(path.resolve(root, data), 'utf8'), {
+        schema: inclusionSchema,
+        filename: path.basename(data)
+      })
+  });
+
+  // A schema that allows file inclustion within YAML
+  inclusionSchema = new yaml.Schema({
+    include: [yaml.DEFAULT_SAFE_SCHEMA],
+    explicit: [includeType]
+  });
+
+  return inclusionSchema;
+};
 
 /**
  * Parse incoming file content into an array of test cases
  *
- * @param {String} filename - YAML file name
+ * @param {String} fullpath - YAML file absolute path
  * @param {String} content - parsed file content
  * @return {Promise<Array<Scenario>>} promise resolved with the array of parsed test specifications
  */
-const parseFile = (filename, content) =>
+const parseFile = (fullpath, content) =>
   new Promise(resolve => {
-    // extract content with csv-parse function
-    const spec = yaml.safeLoad(content);
+    const filename = path.basename(fullpath);
+    // extract content with YAML parser + our custom inclusion YAML type
+    const spec = yaml.safeLoad(content, {schema: declareSchema(path.dirname(fullpath))});
     // validates spec class name existence
     if (!spec.scenario) {
       throw new Error(`${filename} does not include scenario id`);
@@ -48,19 +83,19 @@ const parseFile = (filename, content) =>
  * - tests {Array<Object>} - list of tests to be run. Each test is a fixtures given to the
  * Scenario instance. Depending on the Scenario, a test name is extracted or generated
  *
- * @param {String} specPath - full or relative path to spec YAML file
+ * @param {String} spec - full or relative path to spec YAML file
  * @return {Promise<Array<Scenario>>} resolved with the read scenarii as parameter
  */
-module.exports = specPath => {
+module.exports = spec => {
   return new Promise((resolve, reject) => {
-    specPath = resolvePath(specPath);
+    spec = path.resolve(spec);
     // opens the specified file as utf8
-    fs.readFile(specPath, {encoding: `utf8`}, (err, content) => {
+    fs.readFile(spec, {encoding: `utf8`}, (err, content) => {
       if (err) {
         return reject(err);
       }
       // parsing might throw exception that will reject promise
-      resolve(parseFile(basename(specPath), content));
+      resolve(parseFile(spec, content));
     });
   });
 };

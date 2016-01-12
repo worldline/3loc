@@ -1,0 +1,4 @@
+param1: true
+param2:
+  in: false
+  out: 10

@@ -95,4 +95,27 @@ describe(`YAML Spec parser`, () => {
     });
   });
 
+  it(`should report yaml file inclusion errors`, done => {
+    parse(join(fixtures, `inclusion-broken.yaml`)).
+    then(() => done(`should have failed !`)).
+    catch(err => {
+      expect(err).to.have.property(`message`).that.includes(`ENOENT`).and.includes(`unexisting.yaml`);
+      done();
+    }).catch(done);
+  });
+
+  it(`should support yaml file inclusions`, () => {
+    return parse(join(fixtures, `inclusion.yaml`)).then(scenarii => {
+      expect(scenarii).to.have.lengthOf(2);
+      expect(scenarii[0].name).to.equals('Test 1');
+      expect(scenarii[0].fixtures).to.have.deep.property(`config.param1`).that.is.true;
+      expect(scenarii[0].fixtures).to.have.deep.property(`config.param2.in`).that.is.false;
+      expect(scenarii[0].fixtures).to.have.deep.property(`config.param2.out`).that.equals(10);
+      expect(scenarii[1].name).to.equals('Test 2');
+      expect(scenarii[1].fixtures).to.have.deep.property(`config.param1`).that.is.true;
+      expect(scenarii[1].fixtures).to.have.deep.property(`config.param2.in`).that.is.false;
+      expect(scenarii[1].fixtures).to.have.deep.property(`config.param2.out`).that.equals(10);
+    });
+  });
+
 });

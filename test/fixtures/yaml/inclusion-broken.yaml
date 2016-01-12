@@ -1,0 +1,4 @@
+scenario: Base
+tests:
+  - name: Test 1
+    conf: !!inc/file unexisting.yaml

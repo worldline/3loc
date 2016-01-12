@@ -1,0 +1,5 @@
+scenario: Base
+config: !!inc/file included.yml
+tests:
+  - name: Test 1
+  - name: Test 2
