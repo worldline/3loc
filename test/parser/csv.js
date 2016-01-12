@@ -5,38 +5,45 @@ const join = require(`path`).join;
 const parse = require(`../../src/parser/csv`);
 const Base = require(`../../src/scenario/base`);
 
-const fixtures = join(__dirname, `..`, `fixtures`);
+const fixtures = join(__dirname, `..`, `fixtures`, `csv`);
 
 describe(`CSV Spec parser`, () => {
 
-  it(`should fail on unexisting file`, () => {
-    return parse(join(fixtures, `unexisting-base.csv`)).catch(err => {
+  it(`should fail on unexisting file`, done => {
+    parse(join(fixtures, `unexisting-base.csv`)).
+    then(() => done(`should have failed !`)).
+    catch(err => {
       expect(err).to.have.property(`message`).that.matches(/ENOENT/);
-    });
+      done();
+    }).catch(done);
   });
 
-  it(`should validate spec file name`, () => {
-    return parse(`nospec.csv`).catch(err => {
+  it(`should validate spec file name`, done => {
+    parse(join(fixtures, `nospec.csv`)).
+    then(() => done(`should have failed !`)).
+    catch(err => {
       expect(err).to.have.property(`message`).that.matches(/does not include scenario id/);
-    });
+      done();
+    }).catch(done);
   });
 
-  it(`should check scenario existence`, () => {
-    return parse(`spec-unknown.csv`).catch(err => {
+  it(`should check scenario existence`, done => {
+    parse(join(fixtures, `spec-unknown.csv`)).
+    then(() => done(`should have failed !`)).
+    catch(err => {
       expect(err).to.have.property(`message`).that.matches(/unknown is not a known scenario/);
-    });
+      done();
+    }).catch(done);
   });
 
   it(`should read empty file`, () => {
-    return parse(join(fixtures, `empty-base.csv`)).then(scenarii => {
-      expect(scenarii).to.be.empty;
-    });
+    return parse(join(fixtures, `empty-base.csv`)).
+    then(scenarii => expect(scenarii).to.be.empty);
   });
 
   it(`should not return header line`, () => {
-    return parse(join(fixtures, `simple-base.csv`)).then(scenarii => {
-      expect(scenarii).to.have.lengthOf(1);
-    });
+    return parse(join(fixtures, `simple-base.csv`)).
+    then(scenarii => expect(scenarii).to.have.lengthOf(1));
   });
 
   it(`should cast parsed values`, () => {
@@ -56,10 +63,13 @@ describe(`CSV Spec parser`, () => {
     });
   });
 
-  it(`should fail on incorrect CSV`, () => {
-    return parse(join(fixtures, `broken-base.csv`)).catch(err => {
+  it(`should fail on incorrect CSV`, done => {
+    parse(join(fixtures, `broken-base.csv`)).
+    then(() => done(`should have failed !`)).
+    catch(err => {
       expect(err).to.have.property(`message`).that.match(/Quoted field not terminated/);
-    });
+      done();
+    }).catch(done);
   });
 
   it(`should generate test names`, () => {

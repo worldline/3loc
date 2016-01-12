@@ -1,0 +1,4 @@
+scenario: Base
+tests:
+  - id: 123456
+  - id: 654987

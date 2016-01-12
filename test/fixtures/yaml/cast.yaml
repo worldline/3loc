@@ -1,0 +1,6 @@
+scenario: Base
+tests:
+  - bool1:    TRUE
+    bool2:  False
+    str: a string
+    num: 10.5

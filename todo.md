@@ -8,6 +8,5 @@
 
 # TODO projet
 
-0. YAML descriptor
 0. make Daimler specific scenario with CBP mocking
 

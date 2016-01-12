@@ -1,0 +1,13 @@
+scenario: Base
+tests:
+  - name: first test
+    id: 123456
+    vehicle: 123456
+    insurer: IN1
+    scoring: C1
+    acceleration: 50
+    coasting: 20
+    constant: 30
+    trackOn: ~
+    trackOff: ~
+    score: 53

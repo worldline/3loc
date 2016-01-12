@@ -98,7 +98,7 @@ const loadScenarioClass = filename => {
  * @param {String} specPath - full or relative path to spec CSV file
  * @return {Promise<Array<Scenario>>} resolved with the read scenarii as parameter
  */
-const parse = specPath => {
+module.exports = specPath => {
   return new Promise((resolve, reject) => {
     try {
       const scenario = loadScenarioClass(basename(specPath));
@@ -111,9 +111,7 @@ const parse = specPath => {
         resolve(parseFile(scenario, content));
       });
     } catch (exc) {
-      reject(new Error(`failed to load test template: ${exc.message}`));
+      reject(new Error(`failed to load test scenarii: ${exc.message}`));
     }
   });
 };
-
-module.exports = parse;
