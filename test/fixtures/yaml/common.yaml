@@ -1,0 +1,14 @@
+scenario: Base
+
+common: this is common
+
+tests:
+  - name: test 1
+    custom: scenario 1
+
+  - name: test 2
+    custom: scenario 2
+
+  - name: test 3
+    custom: scenario 3
+    common: this is custom

@@ -3,3 +3,4 @@ coverage/
 .vscode/
 jsconfig.json
 npm-debug.log
+example/

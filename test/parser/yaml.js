@@ -83,4 +83,16 @@ describe(`YAML Spec parser`, () => {
     });
   });
 
+  it(`should include common fixture to each scenario with overloading`, () => {
+    return parse(join(fixtures, `common.yaml`)).then(scenarii => {
+      expect(scenarii).to.have.lengthOf(3);
+      expect(scenarii[0].fixtures).to.have.property(`custom`).that.equals('scenario 1');
+      expect(scenarii[0].fixtures).to.have.property(`common`).that.equals('this is common');
+      expect(scenarii[1].fixtures).to.have.property(`custom`).that.equals('scenario 2');
+      expect(scenarii[1].fixtures).to.have.property(`common`).that.equals('this is common');
+      expect(scenarii[2].fixtures).to.have.property(`custom`).that.equals('scenario 3');
+      expect(scenarii[2].fixtures).to.have.property(`common`).that.equals('this is custom');
+    });
+  });
+
 });

@@ -62,7 +62,7 @@ const parseFile = (Scenario, content) =>
       let i = 0;
       resolve(fixtures.map(fixture => {
         let name = fixture[Scenario.nameProperty] || `test ${++i}`;
-        delete fixture.name;
+        delete fixture[Scenario.nameProperty];
         return new Scenario(name, unflatten(fixture));
       }));
     })

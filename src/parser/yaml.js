@@ -4,6 +4,7 @@ const fs = require(`fs`);
 const resolvePath = require(`path`).resolve;
 const basename = require(`path`).basename;
 const yaml = require(`js-yaml`);
+const _ = require(`lodash`);
 
 /**
  * Parse incoming file content into an array of test cases
@@ -16,18 +17,22 @@ const parseFile = (filename, content) =>
   new Promise(resolve => {
     // extract content with csv-parse function
     const spec = yaml.safeLoad(content);
-    // validates spec class name
+    // validates spec class name existence
     if (!spec.scenario) {
       throw new Error(`${filename} does not include scenario id`);
     }
     try {
       const Scenario = require(`../scenario/${spec.scenario}`);
       let result = [];
+
+      // read common fixtures (everything but 'scenario' and 'tests')
+      const common = _.omit(spec, `scenario`, `tests`);
+
       if (Array.isArray(spec.tests)) {
         result = spec.tests.map((fixture, i) => {
           let name = fixture[Scenario.nameProperty] || `test ${i + 1}`;
-          delete fixture.name;
-          return new Scenario(name, fixture);
+          // creates scenario with common values, but possibility to be specific overloaded
+          return new Scenario(name, _.merge({}, common, _.omit(fixture, Scenario.nameProperty)));
         });
       }
       resolve(result);
