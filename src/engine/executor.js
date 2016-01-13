@@ -8,7 +8,7 @@ if (cluster.isMaster) {
   // master code: the file to spawn will also be executor.jd
   cluster.setupMaster({
     exec: __filename,
-    silent: true
+    silent: false
   });
 } else {
   // in that particular case, we WANT worker process to exit after execution/error
@@ -37,10 +37,11 @@ if (cluster.isMaster) {
   process.on(`unhandledRejection`, errorHandler);
   process.on(`uncaughtException`, errorHandler);
 
-  // master will send the file to execute
-  process.on(`message`, file => {
-    // execute the code
-    const test = require(file);
+  // master will send the code to execute
+  process.on(`message`, code => {
+    // In that case, we DO want to execute generated code
+    /* eslint no-new-func: 0 */
+    const test = Function('require', code)(require);
     if (test.length === 1) {
       // callback style
       test((err, result) => {
@@ -66,10 +67,10 @@ if (cluster.isMaster) {
 /**
  * Execute a test in a sand box, gathering results and exceptions properly
  *
- * @param {String} file - absolute or relative path of executed JS file
+ * @param {String} code - executed code as a string
  * @return {Promise<String>} fullfilled with scenario result (if any)
  */
-module.exports = file =>
+module.exports = code =>
   new Promise((resolve, reject) => {
     // prepare dedicated process for code execution
     const worker = cluster.fork();
@@ -87,5 +88,5 @@ module.exports = file =>
     });
 
     // trigger execution
-    worker.send(file);
+    worker.send(code);
   });

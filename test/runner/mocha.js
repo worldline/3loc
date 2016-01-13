@@ -21,9 +21,9 @@ describe(`Mocha runner`, () => {
 
   it(`should execute failing test an report errors`, () => {
     return run([new Test(`test 1`, `'use strict';
-      module.exports = () => { throw new Error('failed !'); };
+      return () => { throw new Error('failed !'); };
     `, {}), new Test(`test 2`, `'use strict';
-      module.exports = () => 'working !';
+      return () => 'working !';
     `, {})], opts).then(report => {
       expect(report).to.be.exist;
       expect(report).to.have.property(`tests`).that.equals(2);

@@ -1,30 +1,32 @@
 'use strict';
 
 const expect = require(`chai`).expect;
-const join = require(`path`).join;
 const execute = require(`../../src/engine/executor`);
 
-const fixtures = join(__dirname, `..`, `fixtures`, `generated`);
-
-describe(`Scenario executor`, () => {
+describe(`Test executor`, () => {
 
   it(`should run file with promise`, () => {
-    return execute(join(fixtures, `promise.gen`)).
+    return execute(`return () => Promise.resolve('hello !');`).
       then(result => expect(result).to.equals(`hello !`));
   });
 
   it(`should run file with callback`, () => {
-    return execute(join(fixtures, `callback.gen`)).
+    return execute(`
+return done => {
+  setTimeout(() => {
+    done(null, 'salut !');
+  }, 1);
+};`).
       then(result => expect(result).to.equals(`salut !`));
   });
 
   it(`should run synchronous file`, () => {
-    return execute(join(fixtures, `sync.gen`)).
+    return execute(`return () => 'hola !';`).
       then(result => expect(result).to.equals(`hola !`));
   });
 
   it(`should report file syntax errors`, done => {
-    execute(join(fixtures, `syntax-error.gen`)).
+    execute(`return () => {`).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceof(SyntaxError);
@@ -33,19 +35,28 @@ describe(`Scenario executor`, () => {
       }).catch(done);
   });
 
-  it(`should keep error stacks`, done => {
-    execute(join(fixtures, `throw.gen`)).
+  it.skip(`should keep error stacks`, done => {
+    execute(`
+  const f1 = () => f2();
+  const f2 = () => {
+    throw new Error('see my stack !');
+  };
+  return () => f1()`).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceof(Error);
-        expect(err).to.have.property(`message`).that.includes(`hi !`);
-        expect(err.stack).to.include(`throw.gen`);
+        expect(err).to.have.property(`message`).that.includes(`stack !`);
+        expect(err.stack).to.include(`f1`);
+        expect(err.stack).to.include(`f2`);
         done();
       }).catch(done);
   });
 
   it(`should report synchronous thrown errors`, done => {
-    execute(join(fixtures, `throw.gen`)).
+    execute(`
+ return () => {
+   throw new Error('hi !');
+ };`).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceof(Error);
@@ -55,7 +66,12 @@ describe(`Scenario executor`, () => {
   });
 
   it(`should report asynchronous thrown errors`, done => {
-    execute(join(fixtures, `async-throw.gen`)).
+    execute(`
+return () => new Promise(() => {
+  setTimeout(() => {
+    throw new Error("I'm async !");
+  }, 1);
+});`).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceof(Error);
@@ -65,7 +81,12 @@ describe(`Scenario executor`, () => {
   });
 
   it(`should report rejected promised`, done => {
-    execute(join(fixtures, `promise-rejected.gen`)).
+    execute(`
+return () => new Promise((resolve, reject) => {
+  setTimeout(() => {
+    reject(new Error('I was rejected !'));
+  }, 1);
+});`).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceof(Error);
@@ -75,7 +96,12 @@ describe(`Scenario executor`, () => {
   });
 
   it(`should report declarative callback errors`, done => {
-    execute(join(fixtures, `callback-err.gen`)).
+    execute(`
+return done => {
+  setTimeout(() => {
+    done(new Error("I'm in a callback !"));
+  }, 1);
+};`).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceof(Error);

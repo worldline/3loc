@@ -1,7 +1,0 @@
-'use strict';
-
-module.exports = () => new Promise(() => {
-  setTimeout(() => {
-    throw new Error(`I'm async !`);
-  }, 1);
-});
