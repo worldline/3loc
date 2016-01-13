@@ -1,0 +1,7 @@
+'use strict';
+
+module.exports = done => {
+  setTimeout(() => {
+    done(null, `salut !`);
+  }, 1);
+};

@@ -1,0 +1,7 @@
+'use strict';
+
+module.exports = done => {
+  setTimeout(() => {
+    done(new Error(`I'm in a callback !`));
+  }, 1);
+};
