@@ -1,0 +1,2 @@
+scenario;id;vehicle;insurer;scoring;acceleration;coasting;constant;trackOn;trackOff;score
+./fixtures/scn/noop.js;123456;"123456;IN1;C1;50;20;30;;;53

@@ -2,19 +2,8 @@
 
 const expect = require(`chai`).expect;
 const run = require(`../../src/runner/mocha`);
-const Base = require(`../../src/scenario/base`);
+const Test = require(`../../src/engine/test`);
 const shutdownLoggers = require(`../utils/test-utils`).shutdownLoggers;
-
-/**
- * Just a scenario that generates failing tests
- */
-class Failing extends Base {
-  generate() {
-    return () => {
-      throw new Error(`failing !`);
-    };
-  }
-}
 
 const opts = {reporter: `base`};
 
@@ -31,9 +20,13 @@ describe(`Mocha runner`, () => {
   });
 
   it(`should execute failing test an report errors`, () => {
-    return run([new Failing(`test 1`, {})], opts).then(report => {
+    return run([new Test(`test 1`, `'use strict';
+      module.exports = () => { throw new Error('failed !'); };
+    `, {}), new Test(`test 2`, `'use strict';
+      module.exports = () => 'working !';
+    `, {})], opts).then(report => {
       expect(report).to.be.exist;
-      expect(report).to.have.property(`tests`).that.equals(1);
+      expect(report).to.have.property(`tests`).that.equals(2);
       expect(report).to.have.property(`failures`).that.equals(1);
     });
   });

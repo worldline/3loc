@@ -1,4 +1,4 @@
-scenario: Base
+scenario: ./fixtures/scn/noop.js
 tests:
   - name: Test 1
     conf: !!inc/file unexisting.yaml

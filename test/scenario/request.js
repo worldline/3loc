@@ -8,7 +8,7 @@ const path = require(`path`);
 const Request = require(`../../src/scenario/request`);
 const utils = require(`../utils/test-utils`);
 
-describe(`Request Scenario`, () => {
+describe.skip(`Request Scenario`, () => {
 
   let url = `/`;
 

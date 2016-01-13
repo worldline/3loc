@@ -4,8 +4,8 @@ const fs = require(`fs`);
 const path = require(`path`);
 const yaml = require(`js-yaml`);
 const _ = require(`lodash`);
+const Test = require(`../engine/test`);
 const getType = require(`../utils/object`).getType;
-
 
 /**
  * Creates a YAML schema extending js-yaml.DEFAULT_SAFE_SCHEMA,
@@ -54,34 +54,32 @@ const parseFile = (fullpath, content) =>
     const spec = yaml.safeLoad(content, {schema: declareSchema(path.dirname(fullpath))});
     // validates spec class name existence
     if (!spec.scenario) {
-      throw new Error(`${filename} does not include scenario id`);
+      throw new Error(`Missing scenario in ${filename}`);
     }
-    try {
-      const Scenario = require(`../scenario/${spec.scenario}`);
-      let result = [];
+    let result = [];
 
-      // read common fixtures (everything but 'scenario' and 'tests')
-      const common = _.omit(spec, `scenario`, `tests`);
+    // read common fixtures (everything but 'scenario' and 'tests')
+    const common = _.omit(spec, `scenario`, `tests`);
 
-      if (Array.isArray(spec.tests)) {
-        result = spec.tests.map((fixture, i) => {
-          let name = fixture[Scenario.nameProperty] || `test ${i + 1}`;
-          // creates scenario with common values, but possibility to be specific overloaded
-          return new Scenario(name, _.merge({}, common, _.omit(fixture, Scenario.nameProperty)));
-        });
-      }
-      resolve(result);
-    } catch (exc) {
-      throw new Error(`${spec.scenario} is not a known scenario`);
+    if (Array.isArray(spec.tests)) {
+      result = spec.tests.map((fixture, i) => {
+        let name = fixture.name || `test ${i + 1}`;
+        // creates scenario with common values, but possibility to be specific overloaded
+        return new Test(name, spec.scenario, _.merge({}, common, _.omit(fixture, `name`)));
+      });
     }
+    resolve(result);
   });
 
 /**
  * Reads spec file and return an array of test cases
  * Incoming yaml must contain a Map with keys:
- * - scenario {String} - case-sensitive name of the scenario used (in src/scenario folder)
+ * - scenario {String} - path to scenario used for this test
  * - tests {Array<Object>} - list of tests to be run. Each test is a fixtures given to the
- * Scenario instance. Depending on the Scenario, a test name is extracted or generated
+ *
+ * Scenario instance. If 'name' is present in test, it's extracted. Otherwise it's generated
+ * All other properties at root are considered to be common fixtures to each tests.
+ * All properties under test are considered as specific fixtures, that overloads common ones.
  *
  * @param {String} spec - full or relative path to spec YAML file
  * @return {Promise<Array<Scenario>>} resolved with the read scenarii as parameter

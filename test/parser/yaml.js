@@ -17,20 +17,11 @@ describe(`YAML Spec parser`, () => {
     }).catch(done);
   });
 
-  it(`should validate spec file name`, done => {
-    parse(join(fixtures, `nospec.yaml`)).
+  it(`should validate scenario existence`, done => {
+    parse(join(fixtures, `noscenario.yaml`)).
     then(() => done(`should have failed !`)).
     catch(err => {
-      expect(err).to.have.property(`message`).that.matches(/does not include scenario id/);
-      done();
-    }).catch(done);
-  });
-
-  it(`should check scenario existence`, done => {
-    parse(join(fixtures, `unknown.yaml`)).
-    then(() => done(`should have failed !`)).
-    catch(err => {
-      expect(err).to.have.property(`message`).that.matches(/Unknown is not a known scenario/);
+      expect(err).to.have.property(`message`).that.matches(/Missing scenario/);
       done();
     }).catch(done);
   });

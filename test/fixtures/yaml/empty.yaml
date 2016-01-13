@@ -1,1 +1,1 @@
-scenario: Base
+scenario: ./fixtures/scn/noop.js

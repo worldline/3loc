@@ -2,9 +2,9 @@
 
 const fs = require(`fs`);
 const resolvePath = require(`path`).resolve;
-const basename = require(`path`).basename;
 const parseCsv = require(`csv-parse`);
 const utils = require(`../utils/object`);
+const Test = require(`../engine/test`);
 
 const parserOpts = {
   /* eslint camelcase: 0 */
@@ -47,71 +47,56 @@ const unflatten = fixtures => {
 
 /**
  * Parse incoming file content into an array of test cases
+ * Test scenario is in 'scenario' CSV column, and test name in 'name' CSV column (or generated)
  *
- * @param {Function} Scenario - constructor used to build Scenario
  * @param {String} content - parsed file content
  * @return {Promise<Array<Scenario>>} promise resolved with the array of parsed test specifications
  */
-const parseFile = (Scenario, content) =>
+const parseFile = content =>
   new Promise((resolve, reject) =>
     // extract content with csv-parse function
     parseCsv(content, parserOpts, (err, fixtures) => {
       if (err) {
         return reject(err);
       }
-      let i = 0;
-      resolve(fixtures.map(fixture => {
-        let name = fixture[Scenario.nameProperty] || `test ${++i}`;
-        delete fixture[Scenario.nameProperty];
-        return new Scenario(name, unflatten(fixture));
-      }));
+      const tests = [];
+      let i = 1;
+      for (let fixture of fixtures) {
+        let name = fixture.name || `test ${i++}`;
+        let scenario = fixture.scenario;
+        if (!scenario) {
+          reject(new Error(`Missing scenario for test ${name}`));
+          break;
+        }
+        delete fixture.name;
+        delete fixture.scenario;
+        tests.push(new Test(name, scenario, unflatten(fixture)));
+      }
+      resolve(tests);
     })
   );
 
 /**
- * Tries to load a Scenario class from the CSV file name
- * File name must not includes its path, and must contain a dash (-).
- * Everything between the dash and the extension is considered as the scenario class name
- *
- * @param {String} filename - CSV fixture filename
- * @return {Function} the matching Scenario class
- * @throws {Error} if filename does not includes a class name, or if no matching class found
- */
-const loadScenarioClass = filename => {
-  const match = /^.+-(.+)\..+$/.exec(filename);
-  if (!match || !match[1]) {
-    throw new Error(`${filename} does not include scenario id`);
-  }
-  const className = match[1];
-  try {
-    return require(`../scenario/${className}`);
-  } catch (exc) {
-    throw new Error(`${className} is not a known scenario`);
-  }
-};
-
-/**
- * Reads spec file and return an array of test cases
- * TODO describe test structure
- * TODO describe file content
+ * Reads spec file and return an array of test cases.
+ * CSV delimiter is semi-colon (;)
+ * Expected CSV columns are:
+ * - scenario: path to scenario used for this test
+ * - name (Optionnal): test name, will be generated if not found
+ * Every other columns are used as test fixtures.
+ * Column names containing dots (.) will be unflatten into corresponding objects:
+ * `req.code` column will give `{req: {code: ...}}` object
  *
  * @param {String} specPath - full or relative path to spec CSV file
  * @return {Promise<Array<Scenario>>} resolved with the read scenarii as parameter
  */
 module.exports = specPath => {
   return new Promise((resolve, reject) => {
-    try {
-      const scenario = loadScenarioClass(basename(specPath));
-      // opens the specified file as utf8
-      fs.readFile(resolvePath(specPath), {encoding: `utf8`}, (err, content) => {
-        if (err) {
-          return reject(err);
-        }
-        // parsing might throw exception that will reject promise
-        resolve(parseFile(scenario, content));
-      });
-    } catch (exc) {
-      reject(new Error(`failed to load test scenarii: ${exc.message}`));
-    }
-  });
+    // opens the specified file as utf8
+    fs.readFile(resolvePath(specPath), {encoding: `utf8`}, (err, content) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(content);
+    });
+  }).then(parseFile);
 };

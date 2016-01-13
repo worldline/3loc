@@ -88,7 +88,7 @@ class ComplexScenario extends Base {
   }
 }
 
-describe(`Base scenario`, () => {
+describe.skip(`Base scenario`, () => {
 
   it(`should accept name and fixtures in constructor`, () => {
     const name = `name-${Math.floor(Math.random() * 100)}`;

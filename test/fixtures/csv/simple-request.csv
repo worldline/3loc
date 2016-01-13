@@ -1,3 +1,0 @@
-host;url;code
-http://localhost;/search?q=npm;200
-http://localhost;/search?q=toto;200

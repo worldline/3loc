@@ -12,7 +12,7 @@ describe(`CLI run`, () => {
   shutdownLoggers([`mocha`, `cli-run`]);
 
   it(`should run test with specified report`, () => {
-    return run(join(fixtures, `csv`, `simple-base.csv`), {reporter: `base`}).
+    return run(join(fixtures, `csv`, `simple.csv`), {reporter: `base`}).
       then(report => {
         expect(report).to.exist;
         expect(report).to.have.property(`tests`).that.equals(1);
@@ -20,7 +20,7 @@ describe(`CLI run`, () => {
   });
 
   it(`should report runner crash`, done => {
-    run(join(fixtures, `csv`, `simple-base.csv`), {reporter: `unexisting`}).
+    run(join(fixtures, `csv`, `simple.csv`), {reporter: `unexisting`}).
       then(() => done(`should have failed`)).
       catch(exc => {
         expect(exc).to.exist;

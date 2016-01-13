@@ -1,0 +1,3 @@
+scenario;host;url;code
+./fixtures/scn/request.js;http://localhost;/search?q=npm;200
+./fixtures/scn/request.js;http://localhost;/search?q=toto;200

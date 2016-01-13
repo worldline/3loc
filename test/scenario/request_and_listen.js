@@ -9,7 +9,7 @@ const path = require(`path`);
 const RequestAndListen = require(`../../src/scenario/request_and_listen`);
 const utils = require(`../utils/test-utils`);
 
-describe(`Request & Listen Scenario`, () => {
+describe.skip(`Request & Listen Scenario`, () => {
 
   it(`should enforce fixtures`, () => {
     const name = `test`;
