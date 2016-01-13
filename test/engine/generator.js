@@ -9,7 +9,7 @@ const fixtures = path.join(__dirname, `..`, `fixtures`, `scn`);
 describe(`Test generator`, () => {
 
   it(`should load scenario and generate test`, () => {
-    return load(path.join(fixtures, `working.js`), {msg: `hello`}).
+    return load(path.join(fixtures, `working.scn`), {msg: `hello`}).
       then(file => {
         expect(path.extname(file)).to.equals('.js');
         expect(path.basename(file).replace(/.js$/, '')).to.be.a.number;

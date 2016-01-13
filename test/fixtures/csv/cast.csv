@@ -1,2 +1,2 @@
 scenario;bool1;bool2;str;num
-./fixtures/scn/noop.js;   TRUE   ;fAlse;a string;10.5
+./fixtures/scn/noop.scn;   TRUE   ;fAlse;a string;10.5

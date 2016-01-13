@@ -1,4 +1,4 @@
-scenario: ./fixtures/scn/noop.js
+scenario: ./fixtures/scn/noop.scn
 tests:
   - name: first test
     id: 123456

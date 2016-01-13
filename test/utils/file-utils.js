@@ -41,8 +41,8 @@ describe(`file utils`, () => {
         then(content => {
           expect(content).to.be.empty;
         }).
-        then(() => utils.compile())
-        .then(content => {
+        then(() => utils.compile()).
+        then(content => {
           expect(content).to.be.empty;
         });
     });

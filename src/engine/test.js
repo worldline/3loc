@@ -40,6 +40,6 @@ module.exports = class Test {
    * @returns {Promise} fullfilled when scenario is done with its result.
    */
   run() {
-    return generate(this.file).then(execute);
+    return generate(this.file, this.fixtures).then(execute);
   }
 };

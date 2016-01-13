@@ -1,2 +1,2 @@
 scenario;a.b.c;a.b.d
-./fixtures/scn/noop.js;true;10
+./fixtures/scn/noop.scn;true;10

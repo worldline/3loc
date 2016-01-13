@@ -1,0 +1,20 @@
+'use strict'
+
+const request = require(`request`);
+const expect = require(`chai`).expect;
+
+module.exports = done => {
+  request({
+    method: `{{method}}` || `GET`,
+    url: `{{host}}{{url}}`,
+    followRedirect: false,
+    headers: {
+      'Content-Type': `{{contentType}}` || `text/plain`
+    },
+    body: `{{body}}` || ``
+  }, (err, resp, parsedBody) => {
+    expect(err, `Unexpected error`).not.to.exist;
+    expect(resp, `Unexpected HTTP status code`).to.have.property(`statusCode`).that.equals({{code}});
+    done(parsedBody);
+  })
+};
