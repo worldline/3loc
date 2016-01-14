@@ -1,6 +1,7 @@
 'use strict';
 
 const cluster = require(`cluster`);
+const actions = require(`../actions`);
 
 // code coverage can't be computed for this branch because it's executed on separated process
 /* istanbul ignore else */
@@ -39,9 +40,19 @@ if (cluster.isMaster) {
 
   // master will send the code to execute
   process.on(`message`, code => {
-    // In that case, we DO want to execute generated code
+    // we will give as parameters every actions defined
+    // + the require() function and process variable
+    const parameterNames = [`require`, `process`];
+    const parameters = [require, process];
+    for (let actionName in actions) {
+      parameterNames.push(actionName);
+      parameters.push(actions[actionName]);
+    }
+    // executed code is the last parameter
+    parameterNames.push(code);
+    // in that case, we DO want to execute generated code
     /* eslint no-new-func: 0 */
-    const test = Function('require', code)(require);
+    const test = Function.apply({}, parameterNames).apply({}, parameters);
     if (test.length === 1) {
       // callback style
       test((err, result) => {

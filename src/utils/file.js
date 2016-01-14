@@ -7,11 +7,12 @@ const Hogan = require(`hogan`);
 /**
  * Loads body from a given file
  * @param {String} file - relative or absolute path to file
+ * @param {String} encoding = utf8 - encoding used for reading
  * @return {Promise<String>} fullfilled with file's content
  */
-exports.load = file =>
+exports.load = (file, encoding) =>
   new Promise((resolve, reject) => {
-    fs.readFile(path.resolve(file), 'utf8', (err, content) => {
+    fs.readFile(path.resolve(file), encoding || 'utf8', (err, content) => {
       if (err) {
         return reject(new Error(`Failed to load file: ${err.message}`));
       }

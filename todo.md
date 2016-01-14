@@ -1,10 +1,10 @@
 # TODO list
 
-0. request scenario: header in fixtures.
-0. request scenario: response validation (Json and text)
-0. base scenario: timeout
-0. fixtures validation: display message better
-0. refactor scenario authoring
+0. creates a Json validation action
+0. creates a Text validation action
+0. listen action: add a timeout
+0. mocha runner: specify reporter extra options
+0. use lab runner to run tests in parallel
 
 # TODO projet
 
