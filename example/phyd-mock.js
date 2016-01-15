@@ -14,7 +14,7 @@ const port = 4000;
 
 app.post(`/trip`, (req, res) => {
   console.log(`trip received:\n${req.body}`);
-  res.end(`<msg>Ping received !</msg>`);
+  res.status(200).end(`<msg>Ping received !</msg>`);
 
   setTimeout(() => {
     request.post({

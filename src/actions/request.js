@@ -12,7 +12,7 @@ const schema = Joi.object().keys({
   body: Joi.alternatives(Joi.string(), Joi.object()),
   headers: Joi.object(),
   followRedirect: Joi.boolean()
-});
+}).unknown();
 
 /**
  * Makes an Http(s) request on a given url.
@@ -27,7 +27,8 @@ const schema = Joi.object().keys({
  * @param {String} [opt.body] - body sent (only when doing POST and PUT)
  * @param {Object} opt.headers = {content-type: 'text/plain'} - request headers
  * @param {Boolean} opt.followRedirect = false - automatically follows redirection
- * @return {Promise<String>} fulfilled with an object containing
+ * @param {Object} opt._ctx = {} - internal context used for reporting
+ * @return {Promise<String>} fulfilled with the option object modified with:
  * @return {String} body - response body received (might be parsed in JSON/XML)
  * @return {Object} headers - response headers
  * @return {Number} code - http status code
@@ -45,6 +46,9 @@ module.exports = opt => {
     body = JSON.stringify(body);
   }
   return new Promise((resolve, reject) => {
+    opt._ctx = opt._ctx || {stack: []};
+    opt._ctx.stack.push(`request ${opt.url}`);
+
     request({
       method: opt.method || `GET`,
       url: opt.url,
@@ -67,11 +71,10 @@ module.exports = opt => {
       } catch (exc) {
         return reject(exc);
       }
-      resolve({
-        code: resp.statusCode,
-        headers: resp.headers,
-        body: parsedBody
-      });
+      opt.code = resp.statusCode;
+      opt.headers = resp.headers;
+      opt.body = parsedBody;
+      resolve(opt);
     });
   });
 };

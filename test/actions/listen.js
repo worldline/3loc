@@ -279,6 +279,33 @@ describe(`Http listening action`, () => {
         }).catch(done);
       });
     });
+
+    it(`should propagate context`, () => {
+      let server = listen({port, url: `/`});
+
+      request(`http://localhost:${port}/`, err => {
+        expect(err).not.to.exist;
+
+        server.then(result => {
+          expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(1);
+          expect(result._ctx.stack[0]).to.equals(`listen to GET /`);
+
+          result.method = `POST`;
+          result.url = `/toto`;
+          server = listen(result);
+
+          request.post(`http://localhost:${port}/toto`, err2 => {
+            expect(err2).not.to.exist;
+
+            server.then(res => {
+              expect(res).to.have.deep.property(`_ctx.stack`).that.has.length(2);
+              expect(res._ctx.stack[1]).to.equals(`listen to POST /toto`);
+              done();
+            });
+          });
+        }).catch(done);
+      });
+    });
   });
 
 });

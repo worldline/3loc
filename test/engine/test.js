@@ -11,4 +11,10 @@ describe(`Test class`, () => {
       {name: `Virgile`}
     ).run().then(result => expect(result).to.equals(`hi Virgile !`));
   });
+
+  it(`should make enforce fixture presence`, () => {
+    expect(() => new Test(`test 1`,
+      `return function() { return 'hi {{name}} !'}`
+    )).to.throw(/without fixtures/);
+  });
 });

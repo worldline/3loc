@@ -253,5 +253,50 @@ describe(`Http request action`, () => {
           done();
         }).catch(done);
     });
+
+    it(`should parse Json response`, () => {
+      const response = {content: `bonjour`};
+
+      app.get(url, (req, res) => {
+        res.json(response);
+      });
+
+      return request({
+        url: `${host}${url}`
+      }).then(result => {
+        expect(result.headers).to.have.property(`content-type`).that.includes(`application/json`);
+        expect(result.body).to.deep.equals(response);
+      });
+    });
+
+    it(`should propagate context`, () => {
+      const url2 = `/second`;
+
+      app.get(url2, (req, res) => {
+        res.end();
+      });
+      app.get(url, (req, res) => {
+        res.end();
+      });
+
+      return request({
+        url: `${host}${url}`
+      }).
+        then(result => {
+          expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(1);
+          expect(result._ctx.stack[0]).to.equals(`request ${host}${url}`);
+          return result;
+        }).
+        then(result => {
+          result.url = `${host}${url2}`;
+          delete result.body;
+          delete result.headers;
+          return request(result);
+        }).
+        then(result => {
+          expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(2);
+          expect(result._ctx.stack[1]).to.equals(`request ${host}${url2}`);
+        });
+    });
   });
 });

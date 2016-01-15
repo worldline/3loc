@@ -31,13 +31,15 @@ describe(`Mustache rendering action`, () => {
       }).catch(done);
   });
 
-  it(`should render template`, () => {
+  it(`should render template with`, () => {
+    const data = {name: `Damien`, polite: true};
     return render({
       content: `Hello {{name}}{{#polite}}, nice to meet you{{/polite}}.`,
-      data: {name: 'Damien', polite: true}
+      data
     }).
       then(result => {
         expect(result).to.have.property(`content`).that.equals(`Hello Damien, nice to meet you.`);
+        expect(result).to.have.property(`data`).that.equals(data);
       });
   });
 
@@ -47,6 +49,26 @@ describe(`Mustache rendering action`, () => {
     }).
       then(result => {
         expect(result).to.have.property(`content`).that.equals(`Hello !`);
+        expect(result).not.to.have.property(`path`);
+        expect(result).not.to.have.property(`data`);
+      });
+  });
+
+  it(`should propagate context`, () => {
+    return render({content: `Hello !`, path: `somewhere.js`}).
+      then(result => {
+        expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(1);
+        expect(result._ctx.stack[0]).to.equals(`render template somewhere.js`);
+        return result;
+      }).
+      then(result => {
+        delete result.path;
+        result.content = `Hi !`;
+        return render(result);
+      }).
+      then(result => {
+        expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(2);
+        expect(result._ctx.stack[1]).to.equals(`render template`);
       });
   });
 });

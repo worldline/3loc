@@ -34,12 +34,16 @@ const schema = Joi.object().keys({
  * @param {String|Object} opt.body = '' - response sent to incoming request
  * @param {Object} opt.headers = {} - response headers sent to incoming request
  * @param {Number} opt.code = 200 - status code sent to incoming request
- * @return {Promise<String>} fulfilled with an object containing
+ * @param {Object} opt._ctx = {} - internal context used for reporting
+ * @return {Promise<String>} fulfilled with the option object modified with:
  * @return {String} body - body received (might be parsed in JSON/XML)
  * @return {Object} headers - request headers
  */
 module.exports = opt => {
   Joi.assert(opt, schema);
+  const method = opt.method || `GET`;
+  opt._ctx = opt._ctx || {stack: []};
+  opt._ctx.stack.push(`listen to ${method} ${opt.url}`);
 
   let response = opt.body;
   // response body default content type and serialization
@@ -80,7 +84,7 @@ module.exports = opt => {
         try {
           // validates request
           expect(req.path, 'Unexpected url').to.equals(opt.url);
-          expect(req.method, 'Unexpected method').to.equals(opt.method || `GET`);
+          expect(req.method, 'Unexpected method').to.equals(method);
 
           // body parsing
           let body = req.body;
@@ -90,10 +94,9 @@ module.exports = opt => {
             body = JSON.parse(body);
           }
 
-          end(null, {
-            body,
-            headers: req.headers
-          });
+          opt.body = body;
+          opt.headers = req.headers;
+          end(null, opt);
         } catch (exc) {
           end(exc);
         }

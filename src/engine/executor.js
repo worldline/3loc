@@ -40,6 +40,7 @@ if (cluster.isMaster) {
 
   // master will send the code to execute
   process.on(`message`, code => {
+
     // we will give as parameters every actions defined
     // + the require() function and process variable
     const parameterNames = [`require`, `process`];

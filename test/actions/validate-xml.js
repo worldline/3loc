@@ -174,5 +174,36 @@ describe(`XML validatation action`, () => {
       });
   });
 
+  it(`should propagate context`, () => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+      <person>
+        <firstname>John</firstname>
+        <lastname>Smith</lastname>
+      </person>`;
+    const xsd = `<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:element name="person">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="firstname" type="xs:string"/>
+            <xs:element name="lastname" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:schema>`;
 
+    return validate({xml, xsd}).
+      then(result => {
+        expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(1);
+        expect(result._ctx.stack[0]).to.equals(`validate against xsd`);
+        return result;
+      }).
+      then(result => {
+        result.path = `schema.xsd`;
+        return validate(result);
+      }).
+      then(result => {
+        expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(2);
+        expect(result._ctx.stack[1]).to.equals(`validate against xsd schema.xsd`);
+      });
+  });
 });

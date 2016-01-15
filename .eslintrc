@@ -99,7 +99,8 @@ rules:
   no-throw-literal: 2
   no-trailing-spaces: 2
   no-undef-init: 2
-  no-underscore-dangle: 2
+  # because of p
+  no-underscore-dangle: 0
   no-unexpected-multiline: 2
   no-unneeded-ternary: 2
   # Because of chai assertions like `to.be.empty`, or `to.be.true`
