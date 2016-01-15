@@ -1,1 +1,4 @@
 <msg>Ping ! {{name}}</msg>
+{{#req.pos}}
+<pos>{{lon}}</pos>
+{{/req.pos}}

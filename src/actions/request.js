@@ -4,6 +4,7 @@ const request = require(`request`);
 const _ = require(`lodash`);
 const Joi = require(`joi`);
 const libxml = require(`libxmljs`);
+const makePromisable = require(`../utils/object`).makePromisable;
 
 // schema to enforce incoming options
 const schema = Joi.object().keys({
@@ -27,8 +28,8 @@ const schema = Joi.object().keys({
  * @param {String} [opt.body] - body sent (only when doing POST and PUT)
  * @param {Object} opt.headers = {content-type: 'text/plain'} - request headers
  * @param {Boolean} opt.followRedirect = false - automatically follows redirection
- * @param {Object} opt._ctx = {} - internal context used for reporting
- * @return {Promise<String>} fulfilled with the option object modified with:
+ *
+ * @return {Function} function that, returns a promise fulfilled with an object containing:
  * @return {String} body - response body received (might be parsed in JSON/XML)
  * @return {Object} headers - response headers
  * @return {Number} code - http status code
@@ -45,36 +46,38 @@ module.exports = opt => {
     contentType = `application/json`;
     body = JSON.stringify(body);
   }
-  return new Promise((resolve, reject) => {
-    opt._ctx = opt._ctx || {stack: []};
-    opt._ctx.stack.push(`request ${opt.url}`);
+  return makePromisable(args => {
+    args.ctx = args.ctx || {stack: []};
+    args.ctx.stack.push(`request ${opt.url}`);
 
-    request({
-      method: opt.method || `GET`,
-      url: opt.url,
-      followRedirect: opt.followRedirect || false,
-      headers: _.assign({}, {
-        'content-type': contentType
-      }, opt.headers || {}),
-      body
-    }, (err, resp, parsedBody) => {
-      if (err) {
-        return reject(err);
-      }
-      // response parsing, if possible
-      try {
-        if (/\/xml|\+xml/.test(resp.headers['content-type'])) {
-          parsedBody = libxml.parseXmlString(parsedBody);
-        } else if (/\/json|\+json/.test(resp.headers['content-type'])) {
-          parsedBody = JSON.parse(parsedBody);
+    return new Promise((resolve, reject) => {
+      request({
+        method: opt.method || `GET`,
+        url: opt.url,
+        followRedirect: opt.followRedirect || false,
+        headers: _.assign({}, {
+          'content-type': contentType
+        }, opt.headers || {}),
+        body
+      }, (err, resp, parsedBody) => {
+        if (err) {
+          return reject(err);
         }
-      } catch (exc) {
-        return reject(exc);
-      }
-      opt.code = resp.statusCode;
-      opt.headers = resp.headers;
-      opt.body = parsedBody;
-      resolve(opt);
+        // response parsing, if possible
+        try {
+          if (/\/xml|\+xml/.test(resp.headers['content-type'])) {
+            parsedBody = libxml.parseXmlString(parsedBody);
+          } else if (/\/json|\+json/.test(resp.headers['content-type'])) {
+            parsedBody = JSON.parse(parsedBody);
+          }
+        } catch (exc) {
+          return reject(exc);
+        }
+        args.code = resp.statusCode;
+        args.headers = resp.headers;
+        args.body = parsedBody;
+        resolve(args);
+      });
     });
   });
 };

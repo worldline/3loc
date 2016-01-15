@@ -30,9 +30,37 @@ describe(`file utils`, () => {
   describe(`compile`, () => {
 
     it(`should make template replacement`, () => {
-      return utils.compile(`Hi {{name}}`, {name: 'Florian'}).
+      return utils.compile(`Hi <$ name $>`, {name: 'Florian'}).
         then(content => {
           expect(content).to.equals(`Hi Florian`);
+        });
+    });
+
+    it(`should support nesting`, () => {
+      return utils.compile(`Hi <$ person.name $>`, {
+        person: {name: 'Florian'}
+      }).
+        then(content => {
+          expect(content).to.equals(`Hi Florian`);
+        });
+    });
+
+    it(`should replace with data structure`, () => {
+      return utils.compile(`Hi <$ person|stringify $>`, {
+        person: {name: 'Florian'}
+      }).
+        then(content => {
+          expect(content).to.equals(`Hi {"name":"Florian"}`);
+        });
+    });
+
+    it(`should refer parent data`, () => {
+      return utils.compile(`<% for p in persons %><$ p.name $> <$ num $><% endfor %>`, {
+        persons: [{name: 'Florian'}],
+        num: 1
+      }).
+        then(content => {
+          expect(content).to.equals(`Florian 1`);
         });
     });
 
@@ -48,10 +76,19 @@ describe(`file utils`, () => {
     });
 
     it(`should failed on misformated template`, done => {
-      utils.compile(`Hi {{/end}}`, {}).
+      utils.compile(`Hi <% end >`, {}).
         then(() => done(`should have failed !`)).
         catch(err => {
-          expect(err.message).to.include(`Closing tag without opener`);
+          expect(err.message).to.include(`unknown block tag`);
+          done();
+        }).catch(done);
+    });
+
+    it(`should failed on missing data`, done => {
+      utils.compile(`Hi <$ name $>`, {}).
+        then(() => done(`should have failed !`)).
+        catch(err => {
+          expect(err.message).to.include(`attempted to output null`);
           done();
         }).catch(done);
     });

@@ -8,10 +8,18 @@ const request = require(`../../src/actions/request`);
 
 describe(`Http request action`, () => {
 
+  it(`should be composable`, () => {
+    const conf = {url: `http://`};
+    expect(request(conf)).to.be.a(`Function`);
+    expect(request(conf)).not.to.be.an.instanceof(Promise);
+    expect(request(conf)).to.have.length(1);
+    expect(request(conf)).to.have.property(`then`).that.is.a(`Function`).and.that.has.length(1);
+    expect(request(conf)).to.have.property(`catch`).that.is.a(`Function`).and.that.has.length(1);
+  });
+
   it(`should enforce fixtures`, () => {
     // url
-    expect(() => request({
-    })).to.throw(/"url" is required/);
+    expect(() => request({})).to.throw(/"url" is required/);
 
     expect(() => request({
       url: 'ya!'
@@ -26,7 +34,7 @@ describe(`Http request action`, () => {
 
   it(`should report unreachable errors`, done => {
     request({url: `http://localhost:1234/toto`}).
-      then(`should have failed !`).
+      then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.exist;
         expect(err).to.be.an.instanceOf(Error);
@@ -86,7 +94,8 @@ describe(`Http request action`, () => {
       return request({
         method: `PUT`,
         url: `${host}${url}`
-      }).then(result => expect(result.body).to.equals(`ok`));
+      }).
+        then(result => expect(result.body).to.equals(`ok`));
     });
 
     it(`should set request's headers`, () => {
@@ -101,7 +110,8 @@ describe(`Http request action`, () => {
         headers: {
           'x-custom': `yeah !`
         }
-      }).then(result => expect(result.body).to.equals(`ok !`));
+      }).
+        then(result => expect(result.body).to.equals(`ok !`));
     });
 
     it(`should send a text plain body`, done => {
@@ -173,9 +183,10 @@ describe(`Http request action`, () => {
         res.json(response);
       });
 
-      return request({
+      request({
         url: `${host}${url}`
-      }).then(result => {
+      }).
+      then(result => {
         expect(result.headers).to.have.property(`content-type`).that.includes(`application/json`);
         expect(result.body).to.deep.equals(response);
       });
@@ -189,12 +200,12 @@ describe(`Http request action`, () => {
       request({
         url: `${host}${url}`
       }).
-        then(() => done(`should have failed !`)).
-        catch(err => {
-          expect(err).to.be.an.instanceOf(Error);
-          expect(err.message).to.include(`Unexpected end of inpu`);
-          done();
-        }).catch(done);
+      then(() => done(`should have failed !`)).
+      catch(err => {
+        expect(err).to.be.an.instanceOf(Error);
+        expect(err.message).to.include(`Unexpected end of inpu`);
+        done();
+      }).catch(done);
     });
 
     it(`should override default content-type`, done => {
@@ -232,10 +243,11 @@ describe(`Http request action`, () => {
 
       return request({
         url: `${host}${url}`
-      }).then(result => {
-        expect(result.headers).to.have.property(`content-type`).that.includes(`application/xml`);
-        expect(result.body).to.deep.equals(libxml.parseXmlString(response));
-      });
+      }).
+        then(result => {
+          expect(result.headers).to.have.property(`content-type`).that.includes(`application/xml`);
+          expect(result.body).to.deep.equals(libxml.parseXmlString(response));
+        });
     });
 
     it(`should report Xml response parsing error`, done => {
@@ -263,10 +275,11 @@ describe(`Http request action`, () => {
 
       return request({
         url: `${host}${url}`
-      }).then(result => {
-        expect(result.headers).to.have.property(`content-type`).that.includes(`application/json`);
-        expect(result.body).to.deep.equals(response);
-      });
+      }).
+        then(result => {
+          expect(result.headers).to.have.property(`content-type`).that.includes(`application/json`);
+          expect(result.body).to.deep.equals(response);
+        });
     });
 
     it(`should propagate context`, () => {
@@ -283,19 +296,16 @@ describe(`Http request action`, () => {
         url: `${host}${url}`
       }).
         then(result => {
-          expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(1);
-          expect(result._ctx.stack[0]).to.equals(`request ${host}${url}`);
+          expect(result).to.have.deep.property(`ctx.stack`).that.has.length(1);
+          expect(result.ctx.stack[0]).to.equals(`request ${host}${url}`);
           return result;
         }).
+        then(request({
+          url: `${host}${url2}`
+        })).
         then(result => {
-          result.url = `${host}${url2}`;
-          delete result.body;
-          delete result.headers;
-          return request(result);
-        }).
-        then(result => {
-          expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(2);
-          expect(result._ctx.stack[1]).to.equals(`request ${host}${url2}`);
+          expect(result).to.have.deep.property(`ctx.stack`).that.has.length(2);
+          expect(result.ctx.stack[1]).to.equals(`request ${host}${url2}`);
         });
     });
   });

@@ -2,7 +2,25 @@
 
 const fs = require(`fs`);
 const path = require(`path`);
-const Hogan = require(`hogan`);
+const nunjucks = require(`nunjucks`);
+
+// use a dedicated Nunjucks environmenent for compilation
+const compiler = new nunjucks.Environment(null, {
+  autoescape: false,
+  // allows to warn on unreplaced values
+  throwOnUndefined: true,
+  tags: {
+    blockStart: `<%`,
+    blockEnd: `%>`,
+    variableStart: `<$`,
+    variableEnd: `$>`,
+    commentStart: `<#`,
+    commentEnd: `#>`
+  }
+});
+
+// add a stringify filter to pass data structures
+compiler.addFilter(`stringify`, JSON.stringify);
 
 /**
  * Loads body from a given file
@@ -22,7 +40,7 @@ exports.load = (file, encoding) =>
 
 /**
  * Make a body by parsing template in a given context and making needed replacements.
- * Uses Mustache templating with Hogan
+ * Uses Nunjucks templating engine
  * @param {String} template - template content
  * @param {Object} context - context data, used for template filling.
  * @return {Promise<String>} fullfilled with actual body, or nothing if no template provided
@@ -34,8 +52,8 @@ exports.compile = (template, context) =>
       return resolve();
     }
     try {
-      resolve(Hogan.compile(template).render(context));
+      resolve(compiler.renderString(template, context));
     } catch (err) {
-      reject(new Error(`Failed to compile mustache template: ${err.message}`));
+      reject(new Error(`Failed to compile template: ${err.message}`));
     }
   });

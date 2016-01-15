@@ -35,6 +35,20 @@ exports.setProp = (obj, path, value) => {
 };
 
 /**
+ * Add `then` and `catch` attribute to a function, to make it usable as a Promise.
+ * Promisable function only executes at first call, or when invoking then/catch.
+ * @param {Function} fn - the wrapped function
+ * @return {Function} fn with additionnal properties
+ */
+exports.makePromisable = fn => {
+  if (exports.getType(fn) !== 'function') {
+    throw new Error(`must be passed a function`);
+  }
+  fn.then = fn.catch = arg => fn(arg);
+  return fn;
+};
+
+/**
  * Get the property's value of an object, at a given path.
  * Use dots to dive into sub objects
  * @param {Object} obj - the modified root object

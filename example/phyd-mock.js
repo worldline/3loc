@@ -13,7 +13,7 @@ app.use(bodyParser.text({
 const port = 4000;
 
 app.post(`/trip`, (req, res) => {
-  console.log(`trip received:\n${req.body}`);
+  console.log(`trip received:\n${req.body}\n`);
   res.status(200).end(`<msg>Ping received !</msg>`);
 
   setTimeout(() => {
@@ -24,7 +24,7 @@ app.post(`/trip`, (req, res) => {
       if (err) {
         return console.error(`failed to receive score response: ${err.message}`);
       }
-      console.log(`score response received:\n${body}`);
+      console.log(`score response received:\n${body}\n`);
     });
   }, 500);
 });
