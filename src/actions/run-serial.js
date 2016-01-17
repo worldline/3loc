@@ -1,6 +1,7 @@
 'use strict';
 
 const Joi = require(`joi`);
+const makePromisable = require(`../utils/object`).makePromisable;
 
 /**
  * Runs an array of function serially,
@@ -11,8 +12,8 @@ const Joi = require(`joi`);
  * with the latest task's result
  */
 module.exports = tasks => {
-  Joi.assert(tasks, Joi.array().items(Joi.func()));
-  return () => tasks.reduce((cur, next) => {
+  Joi.assert(tasks, Joi.array().items(Joi.object().type(Promise)), `runSerial action`);
+  return makePromisable(() => tasks.reduce((cur, next) => {
     return cur.then(next).then(Promise.resolve());
-  }, Promise.resolve());
+  }, Promise.resolve()));
 };

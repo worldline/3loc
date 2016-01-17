@@ -1,10 +1,7 @@
 const expect = require(`chai`).expect;
 
 return () => request({
-    method: `{{method}}` || `GET`,
-    url: `{{host}}{{url}}`,
+    method: `<$ method $>` || `GET`,
+    url: `<$ host $><$ url $>`,
     followRedirect: false
-  }).then(result => {
-    expect(result.code).to.equals({{code}});
-    return result.body;
-  });
+  }).then(expectStatusCode(<$ code $>))

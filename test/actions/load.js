@@ -8,22 +8,16 @@ describe(`File loading action`, () => {
 
   it(`should enforce fixtures`, () => {
     // path
-    expect(() => load({
-    })).to.throw(/"path" is required/);
+    expect(load).to.throw(/"value" is required/);
 
-    expect(() => load({
-      path: true
-    })).to.throw(/must be a string/);
+    expect(() => load(true)).to.throw(/must be a string/);
 
     // encoding
-    expect(() => load({
-      path: `.`,
-      encoding: `toto`
-    })).to.throw(/must be one of/);
+    expect(() => load(`.`, `toto`)).to.throw(/must be one of/);
   });
 
   it(`should report unexisting file`, done => {
-    load({path: 'unknown'}).
+    load('unknown').
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceof(Error);
@@ -34,7 +28,7 @@ describe(`File loading action`, () => {
 
   it(`should read file content`, () => {
     const file = path.resolve(__dirname, `..`, `fixtures`, `req2.txt`);
-    return load({path: file}).
+    return load(file).
       then(result => {
         expect(result).to.have.property(`content`).that.equals(`bonjour !`);
         expect(result).to.have.property(`path`).that.equals(file);
@@ -43,10 +37,7 @@ describe(`File loading action`, () => {
 
   it(`should encoding be specified file content`, () => {
     const file = path.resolve(__dirname, `..`, `fixtures`, `req2.txt`);
-    return load({
-      path: file,
-      encoding: `base64`
-    }).
+    return load(file, `base64`).
       then(result => {
         expect(result).to.have.property(`content`).that.equals(new Buffer(`bonjour !`).toString(`base64`));
         expect(result).to.have.property(`path`).that.equals(file);
@@ -54,18 +45,13 @@ describe(`File loading action`, () => {
   });
 
   it(`should propagate context`, () => {
-    return load({
-      path: path.resolve(__dirname, `..`, `fixtures`, `req2.txt`)
-    }).
+    return load(path.resolve(__dirname, `..`, `fixtures`, `req2.txt`)).
       then(result => {
         expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(1);
         expect(result._ctx.stack[0]).to.equals(`load file req2.txt`);
         return result;
       }).
-      then(result => {
-        result.path = path.resolve(__dirname, `..`, `fixtures`, `req3.txt`);
-        return load(result);
-      }).
+      then(load(path.resolve(__dirname, `..`, `fixtures`, `req3.txt`))).
       then(result => {
         expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(2);
         expect(result._ctx.stack[1]).to.equals(`load file req3.txt`);

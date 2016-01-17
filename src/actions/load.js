@@ -2,32 +2,34 @@
 
 const Joi = require(`joi`);
 const load = require(`../utils/file`).load;
+const makePromisable = require(`../utils/object`).makePromisable;
 const basename = require(`path`).basename;
-
-// schema to enforce incoming options
-const schema = Joi.object().keys({
-  path: Joi.string().required(),
-  // see https://nodejs.org/api/buffer.html#buffer_buffers_and_character_encodings
-  encoding: Joi.string().valid(`utf8`, `ascii`, `utf16le`, `base64`, `binary`, `hex`)
-}).unknown();
 
 /**
  * Loads file content as a string.
  *
- * @param {Object} opt - option to configure loading
- * @param {String} opt.path - absolute or relative path to read file
- * @param {String} opt.encoding = utf8 - encoding used to read the file
- * @param {Object} opt._ctx = {} - internal context used for reporting
- * @return {Promise<String>} fulfilled with the option object modified with:
- * @return {String} content - file's content
+ * @param {String} path - absolute or relative path to read file
+ * @param {String} encoding = utf8 - encoding used to read the file
+ *
+ * @return {Function} function usable in promises chain.
+ * Takes as first parameter an object.
+ * Returns a promise fulfilled with the same object, containing
+ * - {String} content - response body received (might be parsed in JSON/XML)
+ * - {Object} path - absolute or relative path to read file
  */
-module.exports = opt => {
-  Joi.assert(opt, schema);
-  opt._ctx = opt._ctx || {stack: []};
-  opt._ctx.stack.push(`load file ${basename(opt.path)}`);
-  return load(opt.path, opt.encoding).
-    then(content => {
-      opt.content = content;
-      return opt;
-    });
+module.exports = (path, encoding) => {
+  Joi.assert(path, Joi.string().required(), `load action`);
+  // see https://nodejs.org/api/buffer.html#buffer_buffers_and_character_encodings
+  Joi.assert(encoding, Joi.string().valid(`utf8`, `ascii`, `utf16le`, `base64`, `binary`, `hex`), `load action`);
+
+  return makePromisable(args => {
+    args._ctx = args._ctx || {stack: []};
+    args._ctx.stack.push(`load file ${basename(path)}`);
+    return load(path, encoding).
+      then(content => {
+        args.content = content;
+        args.path = path;
+        return args;
+      });
+  });
 };

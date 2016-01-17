@@ -1,27 +1,22 @@
 'use strict';
 
+const Joi = require(`joi`);
 const expect = require(`chai`).expect;
-
-/**
- * Print a comprehensive error message from context
- * @param {String} assertion - error prefix, generally contains the assertion kind
- * @param {Object} context - context object
- * @return {String} human-readable message
- */
-const printContext = (assertion, context) => {
-  const stack = context && context.stack && context.stack.join(`\nthen `);
-  return `\n${stack ? `when ${stack}\n` : ``}${assertion}`;
-};
+const printContext = require(`../utils/object`).printContext;
 
 /**
  * Checks that a given status code has been received.
  *
  * @param {Number} code - expected value
  * @return {Function} function usable in promises chain
+ * Takes as first parameter an object containing
+ * - {Object} code - checked code value
+ * Returns a promise fulfilled with the same object
  */
 module.exports = code => {
-  return opt => {
-    expect(opt, printContext(`unexpected status code`, opt._ctx)).to.have.property(`code`).that.equals(code);
-    return opt;
+  Joi.assert(code, Joi.number().required(), `statusCode expectation`);
+  return args => {
+    expect(args, printContext(`unexpected status code`, args._ctx)).to.have.property(`code`).that.equals(code);
+    return args;
   };
 };

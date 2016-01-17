@@ -13,7 +13,7 @@ const schema = Joi.object().keys({
   body: Joi.alternatives(Joi.string(), Joi.object()),
   headers: Joi.object(),
   followRedirect: Joi.boolean()
-}).unknown();
+});
 
 /**
  * Makes an Http(s) request on a given url.
@@ -22,62 +22,74 @@ const schema = Joi.object().keys({
  * If a libXML.js Document body is pased, set default content-type to 'application/xml'.
  * They are still overridable.
  *
+ * If body is given as a promise, the expected fulfilled value must include
+ * a `content` property.
+ *
  * @param {Object} opt - option to configure request
  * @param {String} opt.url - full url (protocol, host, port, path) requested
  * @param {String} opt.method = GET - method used
- * @param {String} [opt.body] - body sent (only when doing POST and PUT)
+ * @param {String|Object|Document|Promise} [opt.body] - body sent (only when doing POST and PUT)
  * @param {Object} opt.headers = {content-type: 'text/plain'} - request headers
  * @param {Boolean} opt.followRedirect = false - automatically follows redirection
  *
- * @return {Function} function that, returns a promise fulfilled with an object containing:
- * @return {String} body - response body received (might be parsed in JSON/XML)
- * @return {Object} headers - response headers
- * @return {Number} code - http status code
+ * @return {Function} function usable in promises chain.
+ * Takes as first parameter an object.
+ * Returns a promise fulfilled with the same object, containing
+ * - {String} content - response body received (might be parsed in JSON/XML)
+ * - {Object} headers - response headers
+ * - {Number} code - http status code
  */
 module.exports = opt => {
-  Joi.assert(opt, schema);
-  let body = opt.body;
-  // request body default content type and serialization
-  let contentType = `text/plain`;
-  if (body instanceof libxml.Document) {
-    contentType = `application/xml`;
-    body = body.toString(true);
-  } else if (_.isObject(body)) {
-    contentType = `application/json`;
-    body = JSON.stringify(body);
-  }
+  Joi.assert(opt, schema, `request action`);
   return makePromisable(args => {
-    args.ctx = args.ctx || {stack: []};
-    args.ctx.stack.push(`request ${opt.url}`);
-
-    return new Promise((resolve, reject) => {
-      request({
-        method: opt.method || `GET`,
-        url: opt.url,
-        followRedirect: opt.followRedirect || false,
-        headers: _.assign({}, {
-          'content-type': contentType
-        }, opt.headers || {}),
-        body
-      }, (err, resp, parsedBody) => {
-        if (err) {
-          return reject(err);
+    args._ctx = args._ctx || {stack: []};
+    args._ctx.stack.push(`request ${opt.url}`);
+    // resolve body if provided as a promise
+    return (_.isObject(opt.body) && _.isFunction(opt.body.then) ?
+        opt.body : Promise.resolve({content: opt.body})).
+      then(result => {
+        // request body default content type and serialization
+        let body = result.content;
+        let contentType = `text/plain`;
+        if (body instanceof libxml.Document) {
+          contentType = `application/xml`;
+          body = body.toString(true);
+        } else if (_.isObject(body)) {
+          contentType = `application/json`;
+          body = JSON.stringify(body);
         }
-        // response parsing, if possible
-        try {
-          if (/\/xml|\+xml/.test(resp.headers['content-type'])) {
-            parsedBody = libxml.parseXmlString(parsedBody);
-          } else if (/\/json|\+json/.test(resp.headers['content-type'])) {
-            parsedBody = JSON.parse(parsedBody);
+        return {body, contentType};
+      }).
+      then(content => new Promise((resolve, reject) => {
+        // effectively performs Http(s) request
+        request({
+          method: opt.method || `GET`,
+          url: opt.url,
+          followRedirect: opt.followRedirect || false,
+          headers: _.assign({}, {
+            'content-type': content.contentType
+          }, opt.headers || {}),
+          body: content.body
+        }, (err, resp, parsedBody) => {
+          if (err) {
+            return reject(err);
           }
-        } catch (exc) {
-          return reject(exc);
-        }
-        args.code = resp.statusCode;
-        args.headers = resp.headers;
-        args.body = parsedBody;
-        resolve(args);
-      });
-    });
+          // response parsing, if possible
+          try {
+            if (/\/xml|\+xml/.test(resp.headers['content-type'])) {
+              parsedBody = libxml.parseXmlString(parsedBody);
+            } else if (/\/json|\+json/.test(resp.headers['content-type'])) {
+              parsedBody = JSON.parse(parsedBody);
+            }
+          } catch (exc) {
+            return reject(exc);
+          }
+          args.code = resp.statusCode;
+          args.headers = resp.headers;
+          args.content = parsedBody;
+          resolve(args);
+        });
+      })
+    );
   });
 };

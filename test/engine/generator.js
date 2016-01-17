@@ -22,7 +22,7 @@ describe(`Test generator`, () => {
   });
 
   it(`should use scenario string content to generate test`, () => {
-    return load(`return function() {return '{{msg}} !'}`, {msg: `hi`}).
+    return load(`return function() {return '<$ msg $> !'}`, {msg: `hi`}).
       then(content => {
         expect(content).to.include('hi');
         const test = Function(content)();

@@ -44,8 +44,20 @@ exports.makePromisable = fn => {
   if (exports.getType(fn) !== 'function') {
     throw new Error(`must be passed a function`);
   }
-  fn.then = fn.catch = arg => fn(arg);
+  fn.then = next => fn({}).then(next);
+  fn.catch = next => fn({}).catch(next);
   return fn;
+};
+
+/**
+ * Print a comprehensive error message from context
+ * @param {String} assertion - error prefix, generally contains the assertion kind
+ * @param {Object} context - context object
+ * @return {String} human-readable message
+ */
+exports.printContext = (assertion, context) => {
+  const stack = context && context.stack && context.stack.join(`\nthen `);
+  return `\n${stack ? `when ${stack}\n` : ``}${assertion}`;
 };
 
 /**

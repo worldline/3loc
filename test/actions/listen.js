@@ -86,27 +86,9 @@ describe(`Http listening action`, () => {
     });
   });
 
-  it(`should report server start errors`, done => {
-    // given a started server
-    const server = http.createServer();
-    server.listen(() => {
-      listen({port: server.address().port, url: `/`}).
-        then(() => {
-          server.close();
-          done(`should have failed !`);
-        }).
-        catch(err => {
-          server.close();
-          expect(err).to.be.an.instanceOf(Error);
-          expect(err.message).to.include(`EADDRINUSE`);
-
-          done();
-        }).catch(done);
-    });
-  });
-
   describe(`given a free port`, () => {
     let port;
+    let earlyReturn;
 
     before(done => {
       getFreePort().
@@ -117,63 +99,70 @@ describe(`Http listening action`, () => {
         catch(done);
     });
 
+    beforeEach(() => earlyReturn = true);
+
     it(`should report unexpected request method`, done => {
-      const server = listen({port, url: `/`});
+      listen({port, url: `/`}).
+        then(() => done(`should have failed !`)).
+        catch(err => {
+          expect(earlyReturn).to.be.false;
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.include(`expected 'POST' to equal 'GET'`);
+          done();
+        }).catch(done);
 
       request({
         method: `POST`,
         url: `http://localhost:${port}/`
       }, err => {
         expect(err).not.to.exist;
-        server.
-          then(() => done(`should have failed !`)).
-          catch(err2 => {
-            expect(err2).to.be.an.instanceOf(Error);
-            expect(err2.message).to.include(`expected 'POST' to equal 'GET'`);
-            done();
-          }).catch(done);
+        earlyReturn = false;
       });
     });
 
     it(`should report unexpected url`, done => {
-      const server = listen({port, url: `/`, method: `POST`});
+      listen({port, url: `/`, method: `POST`}).
+        then(() => done(`should have failed !`)).
+        catch(err => {
+          expect(earlyReturn).to.be.false;
+          expect(err).to.be.an.instanceOf(Error);
+          expect(err.message).to.include(`Unexpected url: expected '/toto' to equal '/'`);
+          done();
+        }).catch(done);
 
       request({
         method: `POST`,
         url: `http://localhost:${port}/toto`
       }, err => {
         expect(err).not.to.exist;
-        server.
-          then(() => done(`should have failed !`)).
-          catch(err2 => {
-            expect(err2).to.be.an.instanceOf(Error);
-            expect(err2.message).to.include(`Unexpected url: expected '/toto' to equal '/'`);
-            done();
-          }).catch(done);
+        earlyReturn = false;
       });
     });
 
     it(`should send response headers`, done => {
-      const server = listen({port, url: `/`, headers: {'x-custom': `yeah !`}});
+      listen({port, url: `/`, headers: {'x-custom': `yeah !`}}).
+        then(result => {
+          expect(earlyReturn).to.be.false;
+          expect(result).to.have.property(`content`).that.is.empty;
+          expect(result).to.have.property(`headers`).that.is.an(`object`);
+          done();
+        }).catch(done);
 
       request({
         url: `http://localhost:${port}/`
       }, (err, res) => {
         expect(err).not.to.exist;
         expect(res).to.have.deep.property(`headers.x-custom`).that.equals(`yeah !`);
-        server.then(result => {
-          expect(result).to.have.property(`body`).that.is.empty;
-          expect(result).to.have.property(`headers`).that.is.an(`object`);
-          done();
-        }).catch(done);
+        earlyReturn = false;
       });
     });
 
     it(`should send response status code`, done => {
-      const code = 204;
+      const code = 400;
       listen({port, url: `/`, code}).
         then(result => {
-          expect(result).to.have.property(`body`).that.is.empty;
+          expect(earlyReturn).to.be.false;
+          expect(result).to.have.property(`content`).that.is.empty;
           expect(result).to.have.property(`headers`).that.is.an(`object`);
           done();
         }).catch(done);
@@ -183,12 +172,19 @@ describe(`Http listening action`, () => {
       }, (err, res) => {
         expect(err).not.to.exist;
         expect(res).to.have.property(`statusCode`).that.equals(code);
+        earlyReturn = false;
       });
     });
 
     it(`should send text response`, done => {
       const body = `Hi there !`;
-      const server = listen({port, url: `/`, body});
+      listen({port, url: `/`, body}).
+        then(result => {
+          expect(earlyReturn).to.be.false;
+          expect(result).to.have.property(`content`).that.is.empty;
+          expect(result).to.have.property(`headers`).that.is.an(`object`);
+          done();
+        }).catch(done);
 
       request({
         url: `http://localhost:${port}/`
@@ -196,17 +192,40 @@ describe(`Http listening action`, () => {
         expect(err).not.to.exist;
         expect(res).to.have.deep.property(`headers.content-type`).that.includes(`text/plain`);
         expect(reqBody).to.equal(body);
-        server.then(result => {
-          expect(result).to.have.property(`body`).that.is.empty;
+        earlyReturn = false;
+      });
+    });
+
+
+    it(`should send response from Promise`, done => {
+      const content = `Bonjour !`;
+      listen({port, url: `/`, body: Promise.resolve({content})}).
+        then(result => {
+          expect(earlyReturn).to.be.false;
+          expect(result).to.have.property(`content`).that.is.empty;
           expect(result).to.have.property(`headers`).that.is.an(`object`);
           done();
         }).catch(done);
+
+      request({
+        url: `http://localhost:${port}/`
+      }, (err, res, reqBody) => {
+        expect(err).not.to.exist;
+        expect(res).to.have.deep.property(`headers.content-type`).that.includes(`text/plain`);
+        expect(reqBody).to.equal(content);
+        earlyReturn = false;
       });
     });
 
     it(`should send Json response`, done => {
       const body = {message: `hello`};
-      const server = listen({port, url: `/`, body});
+      listen({port, url: `/`, body}).
+        then(result => {
+          expect(earlyReturn).to.be.false;
+          expect(result).to.have.property(`content`).that.is.empty;
+          expect(result).to.have.property(`headers`).that.is.an(`object`);
+          done();
+        }).catch(done);
 
       request({
         url: `http://localhost:${port}/`
@@ -214,17 +233,19 @@ describe(`Http listening action`, () => {
         expect(err).not.to.exist;
         expect(res).to.have.deep.property(`headers.content-type`).that.includes(`application/json`);
         expect(reqBody).to.equals(JSON.stringify(body));
-        server.then(result => {
-          expect(result).to.have.property(`body`).that.is.empty;
-          expect(result).to.have.property(`headers`).that.is.an(`object`);
-          done();
-        }).catch(done);
+        earlyReturn = false;
       });
     });
 
     it(`should send Xml response`, done => {
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<msg>Hola</msg>\n`;
-      const server = listen({port, url: `/`, body: libxml.parseXmlString(xml)});
+      listen({port, url: `/`, body: libxml.parseXmlString(xml)}).
+        then(result => {
+          expect(earlyReturn).to.be.false;
+          expect(result).to.have.property(`content`).that.is.empty;
+          expect(result).to.have.property(`headers`).that.is.an(`object`);
+          done();
+        }).catch(done);
 
       request({
         url: `http://localhost:${port}/`
@@ -232,18 +253,20 @@ describe(`Http listening action`, () => {
         expect(err).not.to.exist;
         expect(res).to.have.deep.property(`headers.content-type`).that.includes(`application/xml`);
         expect(reqBody).to.equals(xml);
-        server.then(result => {
-          expect(result).to.have.property(`body`).that.is.empty;
-          expect(result).to.have.property(`headers`).that.is.an(`object`);
-          done();
-        }).catch(done);
+        earlyReturn = false;
       });
     });
 
     it(`should parse Json body`, done => {
       const body = {message: `hello`};
       const method = `POST`;
-      const server = listen({port, url: `/`, method});
+      listen({port, url: `/`, method}).
+        then(result => {
+          expect(earlyReturn).to.be.false;
+          expect(result).to.deep.have.property(`headers.content-type`).that.equals(`application/json`);
+          expect(result).to.have.property(`content`).that.deep.equals(body);
+          done();
+        }).catch(done);
 
       request({
         url: `http://localhost:${port}/`,
@@ -252,18 +275,20 @@ describe(`Http listening action`, () => {
         body: JSON.stringify(body)
       }, err => {
         expect(err).not.to.exist;
-        server.then(result => {
-          expect(result).to.deep.have.property(`headers.content-type`).that.equals(`application/json`);
-          expect(result).to.have.property(`body`).that.deep.equals(body);
-          done();
-        }).catch(done);
+        earlyReturn = false;
       });
     });
 
     it(`should parse Xml request body`, done => {
       const body = `<msg>Hola</msg>`;
       const method = `POST`;
-      const server = listen({port, url: `/`, method});
+      listen({port, url: `/`, method}).
+        then(result => {
+          expect(earlyReturn).to.be.false;
+          expect(result).to.deep.have.property(`headers.content-type`).that.equals(`application/xml`);
+          expect(result).to.have.property(`content`).that.deep.equals(libxml.parseXmlString(body));
+          done();
+        }).catch(done);
 
       request({
         url: `http://localhost:${port}/`,
@@ -272,17 +297,12 @@ describe(`Http listening action`, () => {
         body
       }, err => {
         expect(err).not.to.exist;
-        server.then(result => {
-          expect(result).to.deep.have.property(`headers.content-type`).that.equals(`application/xml`);
-          expect(result).to.have.property(`body`).that.deep.equals(libxml.parseXmlString(body));
-          done();
-        }).catch(done);
+        earlyReturn = false;
       });
     });
 
-    it(`should propagate context`, () => {
-      let server = listen({port, url: `/`});
-
+    it(`should propagate context`, done => {
+      let server = Promise.resolve({}).then(listen({port, url: `/`}));
       request(`http://localhost:${port}/`, err => {
         expect(err).not.to.exist;
 
@@ -290,10 +310,7 @@ describe(`Http listening action`, () => {
           expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(1);
           expect(result._ctx.stack[0]).to.equals(`listen to GET /`);
 
-          result.method = `POST`;
-          result.url = `/toto`;
-          server = listen(result);
-
+          server = Promise.resolve(result).then(listen({port, method: `POST`, url: `/toto`}));
           request.post(`http://localhost:${port}/toto`, err2 => {
             expect(err2).not.to.exist;
 
@@ -301,7 +318,7 @@ describe(`Http listening action`, () => {
               expect(res).to.have.deep.property(`_ctx.stack`).that.has.length(2);
               expect(res._ctx.stack[1]).to.equals(`listen to POST /toto`);
               done();
-            });
+            }).catch(done);
           });
         }).catch(done);
       });

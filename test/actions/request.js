@@ -80,7 +80,7 @@ describe(`Http request action`, () => {
         then(result => {
           expect(result).to.be.an('object');
           expect(result).to.have.property(`code`).that.equals(200);
-          expect(result).to.have.property(`body`).that.equals(`Good !`);
+          expect(result).to.have.property(`content`).that.equals(`Good !`);
           expect(result).to.have.deep.property(`headers.x-custom`).that.equals(`124`);
           expect(result).to.have.deep.property(`headers.x-powered-by`).that.equals(`Express`);
         });
@@ -95,7 +95,7 @@ describe(`Http request action`, () => {
         method: `PUT`,
         url: `${host}${url}`
       }).
-        then(result => expect(result.body).to.equals(`ok`));
+        then(result => expect(result.content).to.equals(`ok`));
     });
 
     it(`should set request's headers`, () => {
@@ -111,7 +111,7 @@ describe(`Http request action`, () => {
           'x-custom': `yeah !`
         }
       }).
-        then(result => expect(result.body).to.equals(`ok !`));
+        then(result => expect(result.content).to.equals(`ok !`));
     });
 
     it(`should send a text plain body`, done => {
@@ -130,6 +130,25 @@ describe(`Http request action`, () => {
         url: `${host}${url}`,
         method: `POST`,
         body
+      }).catch(done);
+    });
+
+    it(`should accept body from Promise`, done => {
+      const body = `bonjour`;
+
+      app.post(url, (req, res) => {
+        res.end();
+        process.nextTick(() => {
+          expect(req.headers).to.have.property(`content-type`).that.equals(`text/plain`);
+          expect(req.body).to.equals(body);
+          done();
+        });
+      });
+
+      request({
+        url: `${host}${url}`,
+        method: `POST`,
+        body: Promise.resolve({content: body})
       }).catch(done);
     });
 
@@ -188,7 +207,7 @@ describe(`Http request action`, () => {
       }).
       then(result => {
         expect(result.headers).to.have.property(`content-type`).that.includes(`application/json`);
-        expect(result.body).to.deep.equals(response);
+        expect(result.content).to.deep.equals(response);
       });
     });
 
@@ -246,7 +265,7 @@ describe(`Http request action`, () => {
       }).
         then(result => {
           expect(result.headers).to.have.property(`content-type`).that.includes(`application/xml`);
-          expect(result.body).to.deep.equals(libxml.parseXmlString(response));
+          expect(result.content).to.deep.equals(libxml.parseXmlString(response));
         });
     });
 
@@ -278,7 +297,7 @@ describe(`Http request action`, () => {
       }).
         then(result => {
           expect(result.headers).to.have.property(`content-type`).that.includes(`application/json`);
-          expect(result.body).to.deep.equals(response);
+          expect(result.content).to.deep.equals(response);
         });
     });
 
@@ -296,16 +315,16 @@ describe(`Http request action`, () => {
         url: `${host}${url}`
       }).
         then(result => {
-          expect(result).to.have.deep.property(`ctx.stack`).that.has.length(1);
-          expect(result.ctx.stack[0]).to.equals(`request ${host}${url}`);
+          expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(1);
+          expect(result._ctx.stack[0]).to.equals(`request ${host}${url}`);
           return result;
         }).
         then(request({
           url: `${host}${url2}`
         })).
         then(result => {
-          expect(result).to.have.deep.property(`ctx.stack`).that.has.length(2);
-          expect(result.ctx.stack[1]).to.equals(`request ${host}${url2}`);
+          expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(2);
+          expect(result._ctx.stack[1]).to.equals(`request ${host}${url2}`);
         });
     });
   });

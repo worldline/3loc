@@ -2,6 +2,7 @@
 
 const cluster = require(`cluster`);
 const actions = require(`../actions`);
+const getType = require(`../utils/object`).getType;
 
 // code coverage can't be computed for this branch because it's executed on separated process
 /* istanbul ignore else */
@@ -40,6 +41,7 @@ if (cluster.isMaster) {
 
   // master will send the code to execute
   process.on(`message`, code => {
+    // console.log(code);
 
     // we will give as parameters every actions defined
     // + the require() function and process variable
@@ -54,8 +56,11 @@ if (cluster.isMaster) {
     // in that case, we DO want to execute generated code
     /* eslint no-new-func: 0 */
     const test = Function.apply({}, parameterNames).apply({}, parameters);
-    if (test.length === 1) {
-      // callback style
+    if (test instanceof Promise) {
+      // it's already a Promise
+      test.then(end);
+    } else if (test.length === 1) {
+      // it's a function awaiting a callback
       test((err, result) => {
         if (err) {
           throw err;
@@ -63,9 +68,9 @@ if (cluster.isMaster) {
         end(result);
       });
     } else {
-      // run to get a promise...
+      // it's a function that may return a promise...
       let result = test();
-      if (result instanceof Promise) {
+      if (getType(result) === 'object' && getType(result.then) === 'function') {
         // if it's a promise, resolve later
         result.then(end);
       } else {
