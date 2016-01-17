@@ -1,9 +1,12 @@
 'use strict';
 
 const expect = require(`chai`).expect;
+const shutdownLoggers = require(`../utils/test-utils`).shutdownLoggers;
 const runSerial = require(`../../src/actions/run-serial`);
 
 describe(`Run serial action`, () => {
+
+  shutdownLoggers(`act:serial`);
 
   it(`should run function actions`, () => {
     let earlyStart = true;

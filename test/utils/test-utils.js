@@ -43,6 +43,14 @@ exports.shutdownLoggers = names => {
 };
 
 /**
+ * Make a function immediately runnable as a promise
+ * @param {Function} fn - function immediately run
+ * @param {Object} data = {} - optionnal data give as argument to the function
+ * @return {Promise} fulfilled with the function result
+ */
+exports.run = (fn, data) => Promise.resolve(data || {}).then(fn);
+
+/**
  * Generates a random integer in interval [0..100000[
  * @return {Number} a random integer
  */

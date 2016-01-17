@@ -2,9 +2,13 @@
 
 const expect = require(`chai`).expect;
 const libxml = require(`libxmljs`);
+const run = require(`../utils/test-utils`).run;
+const shutdownLoggers = require(`../utils/test-utils`).shutdownLoggers;
 const expectToMatchXsd = require(`../../src/actions/expect-to-match-xsd`);
 
 describe(`XML validatation action`, () => {
+
+  shutdownLoggers(`expect:xsd`);
 
   it(`should enforce fixtures`, () => {
     expect(() => expectToMatchXsd(10)).
@@ -15,7 +19,7 @@ describe(`XML validatation action`, () => {
   });
 
   it(`should report errored XSD`, done => {
-    expectToMatchXsd(`coucou`).
+    run(expectToMatchXsd(`coucou`)).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.exist;
@@ -26,19 +30,18 @@ describe(`XML validatation action`, () => {
   });
 
   it(`should report errored XML`, done => {
-    Promise.resolve({
+    run(expectToMatchXsd(`<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:element name="person">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="first-name" type="xs:string"/>
+            <xs:element name="last-name" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:schema>`), {
       content: {}
     }).
-      then(expectToMatchXsd(`<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-        <xs:element name="person">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="first-name" type="xs:string"/>
-              <xs:element name="last-name" type="xs:string"/>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-      </xs:schema>`)).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.exist;
@@ -49,22 +52,21 @@ describe(`XML validatation action`, () => {
   });
 
   it(`should report XSD validation errors`, done => {
-    Promise.resolve({
+    run(expectToMatchXsd(`<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:element name="person">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="first-name" type="xs:string"/>
+            <xs:element name="last-name" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:schema>`), {
       content: `<?xml version="1.0" encoding="UTF-8"?>
       <person>
         <toto>Smith</toto>
       </person>`
     }).
-      then(expectToMatchXsd(`<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-        <xs:element name="person">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="first-name" type="xs:string"/>
-              <xs:element name="last-name" type="xs:string"/>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-      </xs:schema>`)).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.exist;
@@ -75,14 +77,7 @@ describe(`XML validatation action`, () => {
   });
 
   it(`should return libXML.js's documents`, () => {
-    return Promise.resolve({
-      content: `<?xml version="1.0" encoding="UTF-8"?>
-      <person>
-        <firstname>John</firstname>
-        <lastname>Smith</lastname>
-      </person>`
-    }).
-      then(expectToMatchXsd(`<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    return run(expectToMatchXsd(`<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
       <xs:element name="person">
         <xs:complexType>
           <xs:sequence>
@@ -91,7 +86,13 @@ describe(`XML validatation action`, () => {
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-    </xs:schema>`)).
+    </xs:schema>`), {
+      content: `<?xml version="1.0" encoding="UTF-8"?>
+      <person>
+        <firstname>John</firstname>
+        <lastname>Smith</lastname>
+      </person>`
+    }).
       then(result => {
         expect(result).to.be.an(`object`);
         expect(result).to.have.property(`content`).that.is.an.instanceof(libxml.Document);
@@ -104,7 +105,7 @@ describe(`XML validatation action`, () => {
       });
   });
 
-  it(`should accept XSD as Promise`, () => {
+  it(`should accept XSD as a function`, () => {
     const content = `<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
       <xs:element name="person">
         <xs:complexType>
@@ -115,14 +116,16 @@ describe(`XML validatation action`, () => {
         </xs:complexType>
       </xs:element>
     </xs:schema>`;
-    return Promise.resolve({
+    return run(expectToMatchXsd(() => {
+      return {content};
+    }), {
       content: `<?xml version="1.0" encoding="UTF-8"?>
       <person>
         <firstname>John</firstname>
         <lastname>Smith</lastname>
       </person>`
     }).
-      then(expectToMatchXsd(Promise.resolve({content}))).
+      then().
       then(result => {
         expect(result).to.be.an(`object`);
         expect(result).to.have.property(`content`).that.is.an.instanceof(libxml.Document);
@@ -141,14 +144,13 @@ describe(`XML validatation action`, () => {
         </xs:complexType>
       </xs:element>
     </xs:schema>`);
-    return Promise.resolve({
+    return run(expectToMatchXsd(xsd), {
       content: `<?xml version="1.0" encoding="UTF-8"?>
       <person>
         <firstname>John</firstname>
         <lastname>Smith</lastname>
       </person>`
     }).
-      then(expectToMatchXsd(xsd)).
       then(result => {
         expect(result).to.be.an(`object`);
         expect(result).to.have.property(`content`).that.is.an.instanceof(libxml.Document);
@@ -161,8 +163,7 @@ describe(`XML validatation action`, () => {
         <firstname>John</firstname>
         <lastname>Smith</lastname>
       </person>`);
-    return Promise.resolve({content}).
-      then(expectToMatchXsd(`
+    return run(expectToMatchXsd(`
     <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
       <xs:element name="person">
         <xs:complexType>
@@ -172,10 +173,14 @@ describe(`XML validatation action`, () => {
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-    </xs:schema>`)).
+    </xs:schema>`), {
+      content,
+      path: `schema.xsd`
+    }).
       then(result => {
         expect(result).to.be.an(`object`);
         expect(result).to.have.property(`content`).that.equals(content);
+        expect(result).to.have.property(`path`).that.equals(`schema.xsd`);
       });
   });
 
@@ -198,11 +203,10 @@ describe(`XML validatation action`, () => {
         </xs:complexType>
       </xs:element>
     </xs:schema>`;
-    Promise.resolve({
+    run(expectToMatchXsd(xsd), {
       content,
       _ctx: {stack}
     }).
-      then(expectToMatchXsd(xsd)).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceof(Error);

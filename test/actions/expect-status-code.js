@@ -2,12 +2,15 @@
 
 const expect = require(`chai`).expect;
 const expectStatusCode = require(`../../src/actions/expect-status-code`);
+const run = require(`../utils/test-utils`).run;
+const shutdownLoggers = require(`../utils/test-utils`).shutdownLoggers;
 
 describe(`Status code expectation`, () => {
 
+  shutdownLoggers(`expect:status`);
+
   it(`should reject no code`, done => {
-    Promise.resolve({}).
-      then(expectStatusCode(200)).
+    run(expectStatusCode(200)).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceof(Error);
@@ -17,8 +20,7 @@ describe(`Status code expectation`, () => {
   });
 
   it(`should reject wrong code`, done => {
-    Promise.resolve({code: 500}).
-      then(expectStatusCode(200)).
+    run(expectStatusCode(200), {code: 500}).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceof(Error);
@@ -28,8 +30,7 @@ describe(`Status code expectation`, () => {
   });
 
   it(`should accept good code`, () => {
-    return Promise.resolve({code: 404}).
-      then(expectStatusCode(404));
+    return run(expectStatusCode(404), {code: 404});
   });
 
   it(`should use stack`, done => {
@@ -37,11 +38,10 @@ describe(`Status code expectation`, () => {
       `load file f1.txt`,
       `request GET /toto`
     ];
-    Promise.resolve({
+    run(expectStatusCode(200), {
       code: 500,
       _ctx: {stack}
     }).
-      then(expectStatusCode(200)).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceof(Error);

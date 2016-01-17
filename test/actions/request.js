@@ -4,18 +4,13 @@ const expect = require(`chai`).expect;
 const express = require(`express`);
 const bodyParser = require(`body-parser`);
 const libxml = require(`libxmljs`);
+const run = require(`../utils/test-utils`).run;
+const shutdownLoggers = require(`../utils/test-utils`).shutdownLoggers;
 const request = require(`../../src/actions/request`);
 
 describe(`Http request action`, () => {
 
-  it(`should be composable`, () => {
-    const conf = {url: `http://`};
-    expect(request(conf)).to.be.a(`Function`);
-    expect(request(conf)).not.to.be.an.instanceof(Promise);
-    expect(request(conf)).to.have.length(1);
-    expect(request(conf)).to.have.property(`then`).that.is.a(`Function`).and.that.has.length(1);
-    expect(request(conf)).to.have.property(`catch`).that.is.a(`Function`).and.that.has.length(1);
-  });
+  shutdownLoggers(`act:request`);
 
   it(`should enforce fixtures`, () => {
     // url
@@ -33,7 +28,7 @@ describe(`Http request action`, () => {
   });
 
   it(`should report unreachable errors`, done => {
-    request({url: `http://localhost:1234/toto`}).
+    run(request({url: `http://localhost:1234/toto`})).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.exist;
@@ -76,7 +71,7 @@ describe(`Http request action`, () => {
           end(`Good !`);
       });
 
-      return request({url: `${host}${url}`}).
+      return run(request({url: `${host}${url}`})).
         then(result => {
           expect(result).to.be.an('object');
           expect(result).to.have.property(`code`).that.equals(200);
@@ -91,10 +86,10 @@ describe(`Http request action`, () => {
         res.end(`ok`);
       });
 
-      return request({
+      return run(request({
         method: `PUT`,
         url: `${host}${url}`
-      }).
+      })).
         then(result => expect(result.content).to.equals(`ok`));
     });
 
@@ -105,12 +100,12 @@ describe(`Http request action`, () => {
         res.end(`ok !`);
       });
 
-      return request({
+      return run(request({
         url: `${host}${url}`,
         headers: {
           'x-custom': `yeah !`
         }
-      }).
+      })).
         then(result => expect(result.content).to.equals(`ok !`));
     });
 
@@ -126,14 +121,14 @@ describe(`Http request action`, () => {
         });
       });
 
-      request({
+      run(request({
         url: `${host}${url}`,
         method: `POST`,
         body
-      }).catch(done);
+      })).catch(done);
     });
 
-    it(`should accept body from Promise`, done => {
+    it(`should accept body from a function`, done => {
       const body = `bonjour`;
 
       app.post(url, (req, res) => {
@@ -145,11 +140,13 @@ describe(`Http request action`, () => {
         });
       });
 
-      request({
+      run(request({
         url: `${host}${url}`,
         method: `POST`,
-        body: Promise.resolve({content: body})
-      }).catch(done);
+        body: () => {
+          return {content: body};
+        }
+      })).catch(done);
     });
 
     it(`should send a Json body`, done => {
@@ -164,11 +161,11 @@ describe(`Http request action`, () => {
         });
       });
 
-      request({
+      run(request({
         url: `${host}${url}`,
         method: `POST`,
         body
-      }).catch(done);
+      })).catch(done);
     });
 
     it(`should send a Xml body`, done => {
@@ -188,11 +185,11 @@ describe(`Http request action`, () => {
         });
       });
 
-      request({
+      run(request({
         url: `${host}${url}`,
         method: `POST`,
         body: libxml.parseXmlString(xml)
-      }).catch(done);
+      })).catch(done);
     });
 
     it(`should parse Json response`, () => {
@@ -202,9 +199,9 @@ describe(`Http request action`, () => {
         res.json(response);
       });
 
-      request({
+      run(request({
         url: `${host}${url}`
-      }).
+      })).
       then(result => {
         expect(result.headers).to.have.property(`content-type`).that.includes(`application/json`);
         expect(result.content).to.deep.equals(response);
@@ -216,9 +213,9 @@ describe(`Http request action`, () => {
         res.set(`Content-type`, `application/json`).send(`{"content":"toto`);
       });
 
-      request({
+      run(request({
         url: `${host}${url}`
-      }).
+      })).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceOf(Error);
@@ -239,13 +236,13 @@ describe(`Http request action`, () => {
         });
       });
 
-      return request({
+      return run(request({
         url: `${host}${url}`,
         headers: {
           'content-type': 'text/json'
         },
         body
-      }).catch(done);
+      })).catch(done);
     });
 
     it(`should parse Xml response`, () => {
@@ -260,9 +257,9 @@ describe(`Http request action`, () => {
         res.set('Content-Type', 'application/xml').send(response);
       });
 
-      return request({
+      return run(request({
         url: `${host}${url}`
-      }).
+      })).
         then(result => {
           expect(result.headers).to.have.property(`content-type`).that.includes(`application/xml`);
           expect(result.content).to.deep.equals(libxml.parseXmlString(response));
@@ -274,9 +271,9 @@ describe(`Http request action`, () => {
         res.set(`Content-type`, `application/xml`).send(`<msg>Toto</ms`);
       });
 
-      request({
+      run(request({
         url: `${host}${url}`
-      }).
+      })).
         then(() => done(`should have failed !`)).
         catch(err => {
           expect(err).to.be.an.instanceOf(Error);
@@ -292,9 +289,9 @@ describe(`Http request action`, () => {
         res.json(response);
       });
 
-      return request({
+      return run(request({
         url: `${host}${url}`
-      }).
+      })).
         then(result => {
           expect(result.headers).to.have.property(`content-type`).that.includes(`application/json`);
           expect(result.content).to.deep.equals(response);
@@ -311,9 +308,9 @@ describe(`Http request action`, () => {
         res.end();
       });
 
-      return request({
+      return run(request({
         url: `${host}${url}`
-      }).
+      })).
         then(result => {
           expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(1);
           expect(result._ctx.stack[0]).to.equals(`request ${host}${url}`);

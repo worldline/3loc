@@ -2,20 +2,22 @@
 
 const _ = require(`lodash`);
 const Joi = require(`joi`);
+const basename = require(`path`).basename;
 const libxml = require(`libxmljs`);
 const expect = require(`chai`).expect;
 const AssertionError = require(`chai`).AssertionError;
 const utils = require(`../utils/object`);
+const logger = require(`../utils/logger`)(`expect:xsd`);
 
 /**
  * Validates incoming content against a given XSD content.
  * Use libXML.js internally.
  * XSD and XML content can be passed as plain string, or as libXML.js's Document objects
  *
- * If xsd is given as a promise, the expected fulfilled value must include
- * a `content` property.
+ * If xsd is given as a function, it must return a promise fulfilled
+ * with an object including a `content` property.
  *
- * @param {String|Object|Promise} xsd - xsd content used for validation
+ * @param {String|Object|Function} xsd - xsd content used for validation
  * @return {Function} function usable in promises chain.
  * Takes as first parameter an object containing
  * - {String|Object} content - xml content validated
@@ -26,11 +28,12 @@ module.exports = xsd => {
   Joi.assert(xsd, Joi.alternatives().try(
     Joi.string(),
     Joi.object().type(libxml.Document),
-    Joi.object({then: Joi.func().required()}).unknown()
+    Joi.func()
   ).required(), `matchXsd expectation`);
+
   // resolve xsd if provided as a promise
-  return utils.makePromisable(args => (_.isObject(xsd) && _.isFunction(xsd.then) ?
-      xsd : Promise.resolve({content: xsd})).
+  return args => (_.isFunction(xsd) ?
+      Promise.resolve({}).then(xsd) : Promise.resolve({content: xsd})).
     then(result => {
       if (_.isString(result.content)) {
         result.content = libxml.parseXmlString(result.content);
@@ -43,7 +46,7 @@ module.exports = xsd => {
       }
       // reuse enriched version
       args.content = xml;
+      logger.debug(`xml is valid against ${args.path ? basename(args.path) : `xsd`}`);
       return args;
-    })
-  );
+    });
 };

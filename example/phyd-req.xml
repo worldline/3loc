@@ -1,4 +1,3 @@
-<msg>Ping ! {{name}}</msg>
-{{#req.pos}}
-<pos>{{lon}}</pos>
-{{/req.pos}}
+<msg>Ping ! <$ name $></msg>
+<% for pos in req.pos %>
+<pos><$ pos.lon $></pos><% endfor %>

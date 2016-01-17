@@ -4,13 +4,13 @@ const request = require(`request`);
 const _ = require(`lodash`);
 const Joi = require(`joi`);
 const libxml = require(`libxmljs`);
-const makePromisable = require(`../utils/object`).makePromisable;
+const logger = require(`../utils/logger`)(`act:request`);
 
 // schema to enforce incoming options
 const schema = Joi.object().keys({
   url: Joi.string().required().regex(/^https?:\/\//),
   method: Joi.string().valid(`GET`, `POST`, `PUT`, `HEAD`, `DELETE`),
-  body: Joi.alternatives(Joi.string(), Joi.object()),
+  body: Joi.alternatives(Joi.string(), Joi.object(), Joi.func()),
   headers: Joi.object(),
   followRedirect: Joi.boolean()
 });
@@ -22,13 +22,13 @@ const schema = Joi.object().keys({
  * If a libXML.js Document body is pased, set default content-type to 'application/xml'.
  * They are still overridable.
  *
- * If body is given as a promise, the expected fulfilled value must include
- * a `content` property.
+ * If body is given as a function, it must return a promise fulfilled
+ * with an object including a `content` property.
  *
  * @param {Object} opt - option to configure request
  * @param {String} opt.url - full url (protocol, host, port, path) requested
  * @param {String} opt.method = GET - method used
- * @param {String|Object|Document|Promise} [opt.body] - body sent (only when doing POST and PUT)
+ * @param {String|Object|Document|Function} [opt.body] - body sent (only when doing POST and PUT)
  * @param {Object} opt.headers = {content-type: 'text/plain'} - request headers
  * @param {Boolean} opt.followRedirect = false - automatically follows redirection
  *
@@ -41,12 +41,14 @@ const schema = Joi.object().keys({
  */
 module.exports = opt => {
   Joi.assert(opt, schema, `request action`);
-  return makePromisable(args => {
+  return args => {
+    const method = opt.method || `GET`;
+
     args._ctx = args._ctx || {stack: []};
     args._ctx.stack.push(`request ${opt.url}`);
     // resolve body if provided as a promise
-    return (_.isObject(opt.body) && _.isFunction(opt.body.then) ?
-        opt.body : Promise.resolve({content: opt.body})).
+    return (_.isFunction(opt.body) ?
+        Promise.resolve({}).then(opt.body) : Promise.resolve({content: opt.body})).
       then(result => {
         // request body default content type and serialization
         let body = result.content;
@@ -62,8 +64,12 @@ module.exports = opt => {
       }).
       then(content => new Promise((resolve, reject) => {
         // effectively performs Http(s) request
+        logger.debug(`request ${method} ${opt.url}`);
+        if (content.body) {
+          logger.debug(`send body:\n${content.body}`);
+        }
         request({
-          method: opt.method || `GET`,
+          method,
           url: opt.url,
           followRedirect: opt.followRedirect || false,
           headers: _.assign({}, {
@@ -73,6 +79,13 @@ module.exports = opt => {
         }, (err, resp, parsedBody) => {
           if (err) {
             return reject(err);
+          }
+          args.code = resp.statusCode;
+          args.headers = resp.headers;
+
+          logger.debug(`request ${method} ${opt.url} got status ${args.code}`);
+          if (parsedBody) {
+            logger.debug(`received body:\n${parsedBody}`);
           }
           // response parsing, if possible
           try {
@@ -84,12 +97,10 @@ module.exports = opt => {
           } catch (exc) {
             return reject(exc);
           }
-          args.code = resp.statusCode;
-          args.headers = resp.headers;
           args.content = parsedBody;
           resolve(args);
         });
       })
     );
-  });
+  };
 };

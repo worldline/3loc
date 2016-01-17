@@ -35,21 +35,6 @@ exports.setProp = (obj, path, value) => {
 };
 
 /**
- * Add `then` and `catch` attribute to a function, to make it usable as a Promise.
- * Promisable function only executes at first call, or when invoking then/catch.
- * @param {Function} fn - the wrapped function
- * @return {Function} fn with additionnal properties
- */
-exports.makePromisable = fn => {
-  if (exports.getType(fn) !== 'function') {
-    throw new Error(`must be passed a function`);
-  }
-  fn.then = next => fn({}).then(next);
-  fn.catch = next => fn({}).catch(next);
-  return fn;
-};
-
-/**
  * Print a comprehensive error message from context
  * @param {String} assertion - error prefix, generally contains the assertion kind
  * @param {Object} context - context object

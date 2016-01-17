@@ -4,6 +4,8 @@ const http = require(`http`);
 const expect = require(`chai`).expect;
 const request = require(`request`);
 const libxml = require(`libxmljs`);
+const run = require(`../utils/test-utils`).run;
+const shutdownLoggers = require(`../utils/test-utils`).shutdownLoggers;
 const listen = require(`../../src/actions/listen`);
 
 /**
@@ -20,6 +22,8 @@ const getFreePort = () => new Promise(resolve => {
 });
 
 describe(`Http listening action`, () => {
+
+  shutdownLoggers(`act:listen`);
 
   it(`should enforce fixtures`, () => {
     // port
@@ -71,7 +75,7 @@ describe(`Http listening action`, () => {
     // given a started server
     const server = http.createServer();
     server.listen(() => {
-      listen({port: server.address().port, url: `/`}).
+      run(listen({port: server.address().port, url: `/`})).
         then(() => {
           server.close();
           done(`should have failed !`);
@@ -102,7 +106,7 @@ describe(`Http listening action`, () => {
     beforeEach(() => earlyReturn = true);
 
     it(`should report unexpected request method`, done => {
-      listen({port, url: `/`}).
+      run(listen({port, url: `/`})).
         then(() => done(`should have failed !`)).
         catch(err => {
           expect(earlyReturn).to.be.false;
@@ -121,7 +125,7 @@ describe(`Http listening action`, () => {
     });
 
     it(`should report unexpected url`, done => {
-      listen({port, url: `/`, method: `POST`}).
+      run(listen({port, url: `/`, method: `POST`})).
         then(() => done(`should have failed !`)).
         catch(err => {
           expect(earlyReturn).to.be.false;
@@ -140,7 +144,7 @@ describe(`Http listening action`, () => {
     });
 
     it(`should send response headers`, done => {
-      listen({port, url: `/`, headers: {'x-custom': `yeah !`}}).
+      run(listen({port, url: `/`, headers: {'x-custom': `yeah !`}})).
         then(result => {
           expect(earlyReturn).to.be.false;
           expect(result).to.have.property(`content`).that.is.empty;
@@ -159,7 +163,7 @@ describe(`Http listening action`, () => {
 
     it(`should send response status code`, done => {
       const code = 400;
-      listen({port, url: `/`, code}).
+      run(listen({port, url: `/`, code})).
         then(result => {
           expect(earlyReturn).to.be.false;
           expect(result).to.have.property(`content`).that.is.empty;
@@ -178,7 +182,7 @@ describe(`Http listening action`, () => {
 
     it(`should send text response`, done => {
       const body = `Hi there !`;
-      listen({port, url: `/`, body}).
+      run(listen({port, url: `/`, body})).
         then(result => {
           expect(earlyReturn).to.be.false;
           expect(result).to.have.property(`content`).that.is.empty;
@@ -197,9 +201,15 @@ describe(`Http listening action`, () => {
     });
 
 
-    it(`should send response from Promise`, done => {
+    it(`should send response from a function`, done => {
       const content = `Bonjour !`;
-      listen({port, url: `/`, body: Promise.resolve({content})}).
+      run(listen({
+        port,
+        url: `/`,
+        body: () => {
+          return {content};
+        }
+      })).
         then(result => {
           expect(earlyReturn).to.be.false;
           expect(result).to.have.property(`content`).that.is.empty;
@@ -219,7 +229,7 @@ describe(`Http listening action`, () => {
 
     it(`should send Json response`, done => {
       const body = {message: `hello`};
-      listen({port, url: `/`, body}).
+      run(listen({port, url: `/`, body})).
         then(result => {
           expect(earlyReturn).to.be.false;
           expect(result).to.have.property(`content`).that.is.empty;
@@ -239,7 +249,7 @@ describe(`Http listening action`, () => {
 
     it(`should send Xml response`, done => {
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<msg>Hola</msg>\n`;
-      listen({port, url: `/`, body: libxml.parseXmlString(xml)}).
+      run(listen({port, url: `/`, body: libxml.parseXmlString(xml)})).
         then(result => {
           expect(earlyReturn).to.be.false;
           expect(result).to.have.property(`content`).that.is.empty;
@@ -260,7 +270,7 @@ describe(`Http listening action`, () => {
     it(`should parse Json body`, done => {
       const body = {message: `hello`};
       const method = `POST`;
-      listen({port, url: `/`, method}).
+      run(listen({port, url: `/`, method})).
         then(result => {
           expect(earlyReturn).to.be.false;
           expect(result).to.deep.have.property(`headers.content-type`).that.equals(`application/json`);
@@ -282,7 +292,7 @@ describe(`Http listening action`, () => {
     it(`should parse Xml request body`, done => {
       const body = `<msg>Hola</msg>`;
       const method = `POST`;
-      listen({port, url: `/`, method}).
+      run(listen({port, url: `/`, method})).
         then(result => {
           expect(earlyReturn).to.be.false;
           expect(result).to.deep.have.property(`headers.content-type`).that.equals(`application/xml`);
@@ -302,7 +312,7 @@ describe(`Http listening action`, () => {
     });
 
     it(`should propagate context`, done => {
-      let server = Promise.resolve({}).then(listen({port, url: `/`}));
+      let server = run(listen({port, url: `/`}));
       request(`http://localhost:${port}/`, err => {
         expect(err).not.to.exist;
 
@@ -310,7 +320,7 @@ describe(`Http listening action`, () => {
           expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(1);
           expect(result._ctx.stack[0]).to.equals(`listen to GET /`);
 
-          server = Promise.resolve(result).then(listen({port, method: `POST`, url: `/toto`}));
+          server = run(listen({port, method: `POST`, url: `/toto`}), result);
           request.post(`http://localhost:${port}/toto`, err2 => {
             expect(err2).not.to.exist;
 

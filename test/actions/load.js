@@ -2,9 +2,13 @@
 
 const expect = require(`chai`).expect;
 const path = require(`path`);
+const run = require(`../utils/test-utils`).run;
+const shutdownLoggers = require(`../utils/test-utils`).shutdownLoggers;
 const load = require(`../../src/actions/load`);
 
 describe(`File loading action`, () => {
+
+  shutdownLoggers(`act:load`);
 
   it(`should enforce fixtures`, () => {
     // path
@@ -17,7 +21,7 @@ describe(`File loading action`, () => {
   });
 
   it(`should report unexisting file`, done => {
-    load('unknown').
+    run(load('unknown')).
       then(() => done(`should have failed !`)).
       catch(err => {
         expect(err).to.be.an.instanceof(Error);
@@ -28,7 +32,7 @@ describe(`File loading action`, () => {
 
   it(`should read file content`, () => {
     const file = path.resolve(__dirname, `..`, `fixtures`, `req2.txt`);
-    return load(file).
+    return run(load(file)).
       then(result => {
         expect(result).to.have.property(`content`).that.equals(`bonjour !`);
         expect(result).to.have.property(`path`).that.equals(file);
@@ -37,7 +41,7 @@ describe(`File loading action`, () => {
 
   it(`should encoding be specified file content`, () => {
     const file = path.resolve(__dirname, `..`, `fixtures`, `req2.txt`);
-    return load(file, `base64`).
+    return run(load(file, `base64`)).
       then(result => {
         expect(result).to.have.property(`content`).that.equals(new Buffer(`bonjour !`).toString(`base64`));
         expect(result).to.have.property(`path`).that.equals(file);
@@ -45,7 +49,7 @@ describe(`File loading action`, () => {
   });
 
   it(`should propagate context`, () => {
-    return load(path.resolve(__dirname, `..`, `fixtures`, `req2.txt`)).
+    return run(load(path.resolve(__dirname, `..`, `fixtures`, `req2.txt`))).
       then(result => {
         expect(result).to.have.deep.property(`_ctx.stack`).that.has.length(1);
         expect(result._ctx.stack[0]).to.equals(`load file req2.txt`);
