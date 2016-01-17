@@ -9,6 +9,7 @@ const compiler = new nunjucks.Environment(null, {
   autoescape: false,
   // allows to warn on unreplaced values
   throwOnUndefined: true,
+  trimBlocks: true,
   tags: {
     blockStart: `<%`,
     blockEnd: `%>`,
