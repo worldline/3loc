@@ -3,10 +3,11 @@
 
 const expect = require(`chai`).expect;
 const moment = require(`moment`);
+const fs = require(`fs`);
 const purgeStyle = require(`./test-utils`).purgeStyle;
 const getLogger = require(`../../src/utils/logger`);
 
-describe(`Logger`, () => {
+describe.only(`Logger`, () => {
 
   it(`should build a logger instance`, () => {
     const name = `test-${Math.floor(Math.random() * 10000)}`;
@@ -26,6 +27,66 @@ describe(`Logger`, () => {
 
     const otherLogger = getLogger(`${name}-1`);
     expect(otherLogger).to.exist.and.not.to.equals(logger);
+  });
+
+  describe(`given no configuration file`, () => {
+
+    let confPath = `logging.properties`;
+
+    beforeEach(done => {
+      fs.unlink(confPath, () => done());
+    });
+
+    after(done => {
+      fs.unlink(confPath, () => done());
+    });
+
+    it(`should read level from file for new loggers`, done => {
+      fs.writeFile(confPath, `[test:logger1]\nlevel=warn\n\n[logger2]\nlevel=error`, err => {
+        expect(err).not.to.exist;
+        setTimeout(() => {
+          expect(getLogger(`test:logger1`).level).to.equals(`warn`);
+          expect(getLogger(`logger2`).level).to.equals(`error`);
+          done();
+        }, 10);
+      });
+    });
+
+    it(`should reload level on file change`, done => {
+      const logger = getLogger(`my-logger`);
+      expect(logger.level).to.equals(`debug`);
+      fs.writeFile(confPath, `[my-logger]\nlevel=warn`, err => {
+        expect(err).not.to.exist;
+        setTimeout(() => {
+          expect(logger.level).to.equals(`warn`);
+          fs.writeFile(confPath, `[my-logger]\nlevel=error`, err2 => {
+            expect(err2).not.to.exist;
+            setTimeout(() => {
+              expect(logger.level).to.equals(`error`);
+              done();
+            }, 10);
+          });
+        }, 10);
+      });
+    });
+
+    it(`should not update unspecified logger`, done => {
+      fs.writeFile(confPath, `[my-logger2]\nlevel=warn`, err => {
+        expect(err).not.to.exist;
+        const logger = getLogger(`my-logger2`);
+        setTimeout(() => {
+          expect(logger.level).to.equals(`warn`);
+          fs.writeFile(confPath, `[my-logger2]\nsomething:else`, err2 => {
+            expect(err2).not.to.exist;
+            setTimeout(() => {
+              expect(logger.level).to.equals(`warn`);
+              done();
+            }, 10);
+          });
+        }, 10);
+      });
+    });
+
   });
 
   describe(`given a mocked console`, () => {

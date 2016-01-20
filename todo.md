@@ -1,6 +1,5 @@
 # TODO list
 
-0. configure logging with file
 0. executor: add test when code returns a Promise
 0. run action: add tests
 0. load action: make relative to fixture file

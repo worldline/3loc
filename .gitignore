@@ -4,3 +4,4 @@ coverage/
 jsconfig.json
 npm-debug.log
 example/
+logging.properties
