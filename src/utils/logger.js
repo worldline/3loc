@@ -52,6 +52,8 @@ const reloadConf = (confPath, sync) =>
     confPath = path.resolve(confPath);
 
     const processContent = (err, content) => {
+      // Can't simulate something else than inexisting file on windows
+      /* istanbul ignore next */
       if (err) {
         // no file ? no conf, no problem
         if (err.message.indexOf(`ENOENT`) !== -1) {
@@ -63,7 +65,11 @@ const reloadConf = (confPath, sync) =>
     };
 
     if (sync) {
-      processContent(null, fs.readFileSync(confPath));
+      try {
+        processContent(null, fs.readFileSync(confPath));
+      } catch (err) {
+        processContent(err);
+      }
     } else {
       fs.readFile(confPath, processContent);
     }
@@ -76,6 +82,11 @@ const reloadConf = (confPath, sync) =>
         loggers[name].level = conf[name].level;
       }
     }
+  }).
+  catch(err => {
+    // Can't simulate unavailable file on windows
+    /* istanbul ignore next */
+    console.log(chalk.red(`failed to read configuration file ${confPath}:`), err);
   });
 
 /**

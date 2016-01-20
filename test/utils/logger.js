@@ -5,9 +5,10 @@ const expect = require(`chai`).expect;
 const moment = require(`moment`);
 const fs = require(`fs`);
 const purgeStyle = require(`./test-utils`).purgeStyle;
+const randomInt = require(`./test-utils`).randomInt;
 const getLogger = require(`../../src/utils/logger`);
 
-describe.only(`Logger`, () => {
+describe(`Logger`, () => {
 
   it(`should build a logger instance`, () => {
     const name = `test-${Math.floor(Math.random() * 10000)}`;
@@ -53,13 +54,14 @@ describe.only(`Logger`, () => {
     });
 
     it(`should reload level on file change`, done => {
-      const logger = getLogger(`my-logger`);
+      const num = randomInt();
+      const logger = getLogger(`my-logger${num}`);
       expect(logger.level).to.equals(`debug`);
-      fs.writeFile(confPath, `[my-logger]\nlevel=warn`, err => {
+      fs.writeFile(confPath, `[my-logger${num}]\nlevel=warn`, err => {
         expect(err).not.to.exist;
         setTimeout(() => {
           expect(logger.level).to.equals(`warn`);
-          fs.writeFile(confPath, `[my-logger]\nlevel=error`, err2 => {
+          fs.writeFile(confPath, `[my-logger${num}]\nlevel=error`, err2 => {
             expect(err2).not.to.exist;
             setTimeout(() => {
               expect(logger.level).to.equals(`error`);
@@ -71,12 +73,13 @@ describe.only(`Logger`, () => {
     });
 
     it(`should not update unspecified logger`, done => {
-      fs.writeFile(confPath, `[my-logger2]\nlevel=warn`, err => {
+      const num = randomInt();
+      fs.writeFile(confPath, `[my-logger${num}]\nlevel=warn`, err => {
         expect(err).not.to.exist;
-        const logger = getLogger(`my-logger2`);
+        const logger = getLogger(`my-logger${num}`);
         setTimeout(() => {
           expect(logger.level).to.equals(`warn`);
-          fs.writeFile(confPath, `[my-logger2]\nsomething:else`, err2 => {
+          fs.writeFile(confPath, `[my-logger${num}]\nsomething:else`, err2 => {
             expect(err2).not.to.exist;
             setTimeout(() => {
               expect(logger.level).to.equals(`warn`);
@@ -84,6 +87,20 @@ describe.only(`Logger`, () => {
             }, 10);
           });
         }, 10);
+      });
+    });
+
+    it(`should not complain with invalid file`, done => {
+      const num = randomInt();
+      // file can't be read
+      fs.writeFile(confPath, ``, err => {
+        expect(err).not.to.exist;
+        fs.chmod(confPath, `200`, err2 => {
+          expect(err2).not.to.exist;
+          const logger = getLogger(`my-logger${num}`);
+          expect(logger.level).to.equals(`debug`);
+          done();
+        });
       });
     });
 

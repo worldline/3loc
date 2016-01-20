@@ -6,8 +6,8 @@ const execute = require(`../../src/engine/executor`);
 describe(`Test executor`, () => {
 
   it(`should run file with promise`, () => {
-    return execute(`return () => Promise.resolve('hello !');`).
-      then(result => expect(result).to.equals(`hello !`));
+    return execute(`return Promise.resolve('bonjour !');`).
+      then(result => expect(result).to.equals(`bonjour !`));
   });
 
   it(`should run file with callback`, () => {
@@ -23,6 +23,11 @@ return done => {
   it(`should run synchronous file`, () => {
     return execute(`return () => 'hola !';`).
       then(result => expect(result).to.equals(`hola !`));
+  });
+
+  it(`should run file returning promise`, () => {
+    return execute(`return () => Promise.resolve('hello !');`).
+      then(result => expect(result).to.equals(`hello !`));
   });
 
   it(`should report file syntax errors`, done => {
