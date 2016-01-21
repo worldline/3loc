@@ -19,6 +19,30 @@ You will surely need to run the same scenario multiple times, with slight change
 We called them *[fixtures][fixt]*, and you can externalize them in a dedicated file (multiple format are supported).
 In fact, the fixture file is the entry point when using 3loc, as it defined the scenario file used.
 
+## Installation
+
+3loc is built upon [Node.js 5+][node].
+You'll need to install it on your computer to use it.
+
+As 3loc uses [libXML.js][libxml], which requires some C++ compilation, you'll also need a C++ compiler
+(gcc or [Visual Studio Community Edition][VS] for example).
+
+Once you have installed Node and a C++ compiler, run the following command to install
+
+    npm install --global 3loc
+
+(then have a cup of coffee)
+
+## Execution
+
+From a command line or a terminal, run
+
+    run3loc path/to/fixture.yml
+
+CLI options are documented:
+
+    run3loc
+
 
 # Providing test fixtures
 
@@ -369,7 +393,7 @@ then(expectStatusCode(404))
   - **code** *{Object}* - checked code value
   - **returns** *{Promise}* fulfilled with the same object
 
-## expecttoMatchXsd
+## expectToMatchXsd
 
 Validates incoming content against a given XSD content.
 Use libXML.js internally.
@@ -389,9 +413,12 @@ then(expectToMatchXsd(load('schema.xsd')))
   - **content** *{String|Object}* - xml content validated
   - **returns** *{Promise}* fulfilled with the same object, where content has been enriched as a libXML.js's Document
 
+[node]: https://nodejs.org/en/download/
 [act]: #available-actions
 [expect]: #expectations
 [fixt]: #providing-test-fixtures
 [wolfram]: http://www.wolfram.com/language/fast-introduction-for-programmers
 [nunjucks]: http://mozilla.github.io/nunjucks/templating.html
 [promise]: http://www.html5rocks.com/en/tutorials/es6/promises/
+[VS]: https://www.visualstudio.com/en-US/products/visual-studio-community-vs.aspx
+[libxml]: https://github.com/polotek/libxmljs/wiki
