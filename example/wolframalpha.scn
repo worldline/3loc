@@ -1,0 +1,6 @@
+return () =>
+  run(request({
+    url: 'http://api.wolframalpha.com/v2/query?input=<$ input $>&appid=<$ appId $>&includepodid=Result'
+  })).
+  then(expectStatusCode(<$ status $>))/*.
+  then(expectContentToInclude('<$ sum $>'))*/;

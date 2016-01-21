@@ -8,6 +8,9 @@ const logger = require(`../utils/logger`)(`act:run`);
  * Promise for next actions and expectations.
  * A must-have when starting a new scenario.
  *
+ * @example
+ * run(request({url: 'http://somewhere.com/'}))
+ *
  * @param {Function} fn - function executed
  * @param {Object} [data] - optionnal data given as function argument
  *

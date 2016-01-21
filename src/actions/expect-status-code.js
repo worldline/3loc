@@ -8,6 +8,10 @@ const logger = require(`../utils/logger`)(`expect:status`);
 /**
  * Checks that a given status code has been received.
  *
+ * @example
+ * run(request({'http://somewhere.com/api'})).
+ * then(expectStatusCode(404))
+ *
  * @param {Number} code - expected value
  * @return {Function} function usable in promises chain
  * Takes as first parameter an object containing

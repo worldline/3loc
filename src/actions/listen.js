@@ -21,17 +21,33 @@ const schema = Joi.object().keys({
 // TODO timeout
 
 /**
- * Starts an http server to listen a given url.
+ * Starts an HTTP server to listen a given url.
  * Acceptable method can be configured, has well as response body and headers.
  *
  * If a JSON body is passed, set default response content-type to 'application/json'.
  * If a libXML.js Document body is pased, set default response content-type to 'application/xml'.
- * They are still overridable.
+ * You can still override the response content-type if needed.
  *
  * If body is given as a function, it must return a promise fulfilled
  * with an object including a `content` property.
  *
- * @param {Object} opt - option to configure loading
+ * Request body will be automatically parsed (using the request content-type) to libXML.js Document or to JSON object for further processing.
+ * Otherwise, the request body is passed as a string.
+ *
+ * @example
+ * listen({
+ *   port: 4000,
+ *   url: '/my-api',
+ *   method: 'POST',
+ *   body: '{"msg": "response sent"}',
+ *   headers: {
+ *     'content-type': 'application/json',
+ *     'x-custom': 'custom'
+ *   },
+ *   code: 200
+ * }).then(...)
+ *
+ * @param {Object} opt - option to configure listening
  * @param {Number} opt.port - absolute or relative path to read file
  * @param {String} opt.url - acceptable url to listen to
  * @param {String} opt.method = GET - acceptable Http method

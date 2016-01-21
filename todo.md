@@ -1,6 +1,7 @@
 # TODO list
 
-0. Add some documentation
+0. implement relative scn loading and test execution folder for CSV
+0. XPath expectation
 0. request/listen/render actions: use args but overrides with opts
 0. parallel action
 0. found a way to output line + column when scenario has syntax errors (eval problem): source maps ?

@@ -1,0 +1,3 @@
+scenario;name;appId;input;sum;status
+./path_to/my-scenario.scn;"nominal case";HLJL66-4W3HPXYYP8;3%2B4;7;200
+./path_to/my-scenario.scn;"handling nulls";HLJL66-4W3HPXYYP8;3%2Bnull;3;200

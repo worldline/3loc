@@ -7,6 +7,10 @@ const logger = require(`../utils/logger`)(`act:load`);
 
 /**
  * Loads file content as a string.
+ * Typically used to read request/response bodies, XSD files...
+ *
+ * @example
+ * load('./path_to/file.txt', 'ascii').then(...)
  *
  * @param {String} path - absolute or relative path to read file
  * @param {String} encoding = utf8 - encoding used to read the file

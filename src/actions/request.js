@@ -16,11 +16,29 @@ const schema = Joi.object().keys({
 });
 
 /**
- * Makes an Http(s) request on a given url.
+ * Makes an HTTP(s) request on a given url.
+ * The HTTP method, the headers and the ability to follow redirections are configurable.
  *
- * If a JSON body is passed, set default content-type to 'application/json'.
- * If a libXML.js Document body is pased, set default content-type to 'application/xml'.
- * They are still overridable.
+ * If a JSON body is passed, set default request content-type to 'application/json'.
+ * If a libXML.js Document body is pased, set default request content-type to 'application/xml'.
+ * You can still override the request content-type if needed.
+ *
+ * Request body will be automatically parsed (using the request content-type) to libXML.js Document or to JSON object for further processing.
+ * Otherwise, the request body is passed as a string.
+ *
+ * @example
+ * request({
+ *   url: 'http://localhost:8080/my-api',
+ *   method: 'PUT',
+ *   body: '{"msg": "request sent"}',
+ *   headers: {
+ *     'content-type': 'application/json',
+ *     'x-custom': 'custom'
+ *   },
+ *   followRedirect: true
+ * }).then(...)
+ *
+ * If you need to pass query parameters, please encode them with the url.
  *
  * If body is given as a function, it must return a promise fulfilled
  * with an object including a `content` property.
@@ -28,8 +46,8 @@ const schema = Joi.object().keys({
  * @param {Object} opt - option to configure request
  * @param {String} opt.url - full url (protocol, host, port, path) requested
  * @param {String} opt.method = GET - method used
- * @param {String|Object|Document|Function} [opt.body] - body sent (only when doing POST and PUT)
- * @param {Object} opt.headers = {content-type: 'text/plain'} - request headers
+ * @param {String|Object|Document|Function} opt.body = '' - body sent (only when doing POST and PUT)
+ * @param {Object} opt.headers = {} - request headers
  * @param {Boolean} opt.followRedirect = false - automatically follows redirection
  *
  * @return {Function} function usable in promises chain.

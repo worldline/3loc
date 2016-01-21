@@ -17,12 +17,15 @@ const logger = require(`../utils/logger`)(`expect:xsd`);
  * If xsd is given as a function, it must return a promise fulfilled
  * with an object including a `content` property.
  *
+ * @example
+ * run(request({'http://somewhere.com/api'})).
+ * then(expectToMatchXsd(load('schema.xsd')))
+ *
  * @param {String|Object|Function} xsd - xsd content used for validation
  * @return {Function} function usable in promises chain.
  * Takes as first parameter an object containing
  * - {String|Object} content - xml content validated
- * Returns a promise fulfilled with the same object, containing
- * - {Object} content - content enriched as a libXML.js's Document
+ * Returns a promise fulfilled with the same object, where content has been enriched as a libXML.js's Document
  */
 module.exports = xsd => {
   Joi.assert(xsd, Joi.alternatives().try(

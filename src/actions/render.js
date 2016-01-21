@@ -8,11 +8,23 @@ const logger = require(`../utils/logger`)(`act:render`);
 
 /**
  * Renders Nunjucks template with given data.
+ * @see Nunjucks http://mozilla.github.io/nunjucks/templating.html templating language,
+ * with the specific delimiters (for readability in scenarii files)
+ * - blockStart: '<%',
+ * - blockEnd: '%>',
+ * - variableStart: '<$',
+ * - variableEnd: '$>',
+ * - commentStart: '<#',
+ * - commentEnd: '#>'
+ *
+ * @example
+ * render('Hello <$ name $> !', {name: 'James'}).then(...)
+ *
  * If content is given as a function, it must return a promise fulfilled
  * with an object including a `content` and `path` properties.
  *
  * @param {String|Function} content - template rendered
- * @param {Object} [data] - data used for rendering
+ * @param {Object} data = {} - data used for rendering
  * @return {Function} function usable in promises chain.
  * Takes as first parameter an object
  * Returns a promise fulfilled with the same object, containing
