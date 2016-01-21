@@ -26,7 +26,7 @@ app.post(`/trip`, (req, res) => {
       }
       console.log(`score response received:\n${body}\n`);
     });
-  }, 500);
+  }, 200);
 });
 
 const server = app.listen(port, () => console.log(`listening on ${server.address().port}`));

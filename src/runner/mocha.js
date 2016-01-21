@@ -9,17 +9,17 @@ const logger = require(`../utils/logger`)(`mocha`);
 /**
  * Conver tests scenarii to Mocha suites and tests.
  *
- * @param {Array<Scenario>} scenarii - test scenarii to register
+ * @param {Array<Test>} tests - tests to register (@see engine.Test)
  * @param {String} suiteName - optional name used for the test suite
  * @returns {Mocha.Suite} the test suite created
  */
-const toMocha = (scenarii, suiteName) => {
+const toMocha = (tests, suiteName) => {
 
   // declares a single describe for all tests.
   const suite = new Suite(suiteName);
   // and declares all specified tests
-  for (let scenario of scenarii) {
-    suite.addTest(new Test(scenario.name, () => scenario.run()));
+  for (let test of tests) {
+    suite.addTest(new Test(test.name, () => test.run()));
   }
   return suite;
 };
@@ -27,17 +27,17 @@ const toMocha = (scenarii, suiteName) => {
 /**
  * Run all specified tests within Mocha and returns result.
  *
- * @param {Array<Scenario>} scenarii - array of integration test scenarii
+ * @param {Array<Test>} tests - tests to register (@see engine.Test)
  * @param {Object} opts - options used for runner
  * @param {String} opts.reporter - reporter used
  * @returns {Promise<Object>} promise resolves when test are finished, with mocha`s statistics
  */
-const run = (scenarii, opts) => {
+const run = (tests, opts) => {
   return new Promise(resolve => {
     logger.log(`prepare mocha execution...`);
 
     const mocha = new Mocha(opts);
-    const runner = new Runner(toMocha(scenarii, `Integration tests`));
+    const runner = new Runner(toMocha(tests, `Integration tests`));
     // instanciate reporter because mocha won`t do it by himself
     /* eslint no-unused-vars: 0, no-underscore-dangle: 0 */
     const reporter = new mocha._reporter(runner);

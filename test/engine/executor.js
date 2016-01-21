@@ -114,4 +114,14 @@ return done => {
         done();
       }).catch(done);
   });
+
+  it(`should use default current directory`, () => {
+    return execute(`return () => process.cwd();`).
+      then(result => expect(result).to.equals(process.cwd()));
+  });
+
+  it(`should use specified current directory`, () => {
+    return execute(`return () => process.cwd();`, __dirname).
+      then(result => expect(result).to.equals(__dirname));
+  });
 });

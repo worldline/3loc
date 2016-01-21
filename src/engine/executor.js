@@ -85,9 +85,10 @@ if (cluster.isMaster) {
  * Execute a test in a sand box, gathering results and exceptions properly
  *
  * @param {String} code - executed code as a string
+ * @param {String} basedir = '.' - path used as execution working folder, default to execution folder
  * @return {Promise<String>} fullfilled with scenario result (if any)
  */
-module.exports = code =>
+module.exports = (code, basedir) =>
   new Promise((resolve, reject) => {
     // prepare dedicated process for code execution
     const worker = cluster.fork();
@@ -104,6 +105,7 @@ module.exports = code =>
       resolve(message.result);
     });
 
-    // trigger execution
-    worker.send(code);
+    // trigger execution, setting the current directory if needed
+    const workdir = (basedir || process.cwd()).replace(/\\/g, '\\\\');
+    worker.send(`process.chdir('${workdir}');\n${code}`);
   });

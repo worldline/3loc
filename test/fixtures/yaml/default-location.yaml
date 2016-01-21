@@ -1,0 +1,3 @@
+scenario: () => Promise.resolve(process.cwd());
+tests:
+  - name: test 1

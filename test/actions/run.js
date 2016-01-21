@@ -1,7 +1,6 @@
 'use strict';
 
 const expect = require(`chai`).expect;
-const path = require(`path`);
 const shutdownLoggers = require(`../utils/test-utils`).shutdownLoggers;
 const run = require(`../../src/actions/run`);
 

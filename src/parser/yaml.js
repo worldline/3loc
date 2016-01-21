@@ -50,25 +50,39 @@ const declareSchema = root => {
 const parseFile = (fullpath, content) =>
   new Promise(resolve => {
     const filename = path.basename(fullpath);
+    const specDir = path.dirname(fullpath);
     // extract content with YAML parser + our custom inclusion YAML type
-    const spec = yaml.safeLoad(content, {schema: declareSchema(path.dirname(fullpath))});
+    const spec = yaml.safeLoad(content, {schema: declareSchema(specDir)});
     // validates spec class name existence
     if (!spec.scenario) {
       throw new Error(`Missing scenario in ${filename}`);
     }
     let result = [];
 
-    // read common fixtures (everything but 'scenario' and 'tests')
-    const common = _.omit(spec, `scenario`, `tests`);
+    // scenario dir is relative to spec dir
+    const scenarioDir = path.resolve(specDir, path.dirname(spec.scenario));
+    fs.exists(scenarioDir, dirExist => {
+      // test working dir will be relative to scenario file, or the spec file if we directly have scenario content
+      const workdir = dirExist ? scenarioDir : specDir;
 
-    if (Array.isArray(spec.tests)) {
-      result = spec.tests.map((fixture, i) => {
-        let name = fixture.name || `test ${i + 1}`;
-        // creates scenario with common values, but possibility to be specific overloaded
-        return new Test(name, spec.scenario, _.merge({}, common, _.omit(fixture, `name`)));
+      // make scenario an absolute path if it's not directely the scenario content
+      let scenario = dirExist ? path.resolve(specDir, spec.scenario) : spec.scenario;
+      fs.exists(scenario, scenarioExist => {
+        scenario = scenarioExist ? scenario : spec.scenario;
+
+        // read common fixtures (everything but 'scenario' and 'tests')
+        const common = _.omit(spec, `scenario`, `tests`);
+
+        if (Array.isArray(spec.tests)) {
+          result = spec.tests.map((fixture, i) => {
+            let name = fixture.name || `test ${i + 1}`;
+            // creates scenario with common values, but possibility to be specific overloaded
+            return new Test(name, scenario, _.merge({}, common, _.omit(fixture, `name`)), workdir);
+          });
+        }
+        resolve(result);
       });
-    }
-    resolve(result);
+    });
   });
 
 /**

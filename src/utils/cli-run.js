@@ -32,7 +32,7 @@ const loadParser = file =>
 module.exports = (specs, opts) => {
   return loadParser(specs).
     then(parse => parse(specs)).
-    then(scenarii => run(scenarii, {reporter: opts.reporter})).
+    then(tests => run(tests, {reporter: opts.reporter})).
     catch(err => {
       logger.error(`failed to run tests:`, err);
       throw err;

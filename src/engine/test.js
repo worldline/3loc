@@ -24,10 +24,12 @@ module.exports = class Test {
    * @param {String} name - test's name
    * @param {String} file - scenario file path or directly scenario content
    * @param {Object} fixtures - test data fixtures
+   * @param {String} workdir = '.' - path used as execution working folder
    */
-  constructor(name, file, fixtures) {
+  constructor(name, file, fixtures, workdir) {
     this.name = name;
     this.file = file;
+    this.workdir = workdir || `.`;
     if (!fixtures) {
       throw new Error(`can't create ${this.constructor.name} scenario without fixtures`);
     }
@@ -40,6 +42,7 @@ module.exports = class Test {
    * @returns {Promise} fullfilled when scenario is done with its result.
    */
   run() {
-    return generate(this.file, this.fixtures).then(execute);
+    return generate(this.file, this.fixtures).
+      then(content => execute(content, this.workdir));
   }
 };

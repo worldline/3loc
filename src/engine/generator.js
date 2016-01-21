@@ -15,6 +15,7 @@ const fileUtils = require(`../utils/file`);
  * @return {Promise<String>} fullfilled with generated file absolute path
  */
 module.exports = (scenario, fixtures) =>
+  // TODO scenario is loaded from execution folder and not spec file
   new Promise(resolve => fs.exists(scenario, resolve)).
     then(exists => exists ? fileUtils.load(scenario) : scenario).
     then(content => fileUtils.compile(content, fixtures));

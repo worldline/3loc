@@ -1,0 +1,3 @@
+scenario: ./nested/nested.scn
+tests:
+  - name: test 1

@@ -17,4 +17,10 @@ describe(`Test class`, () => {
       `return function() { return 'hi <$ name $> !'}`
     )).to.throw(/without fixtures/);
   });
+
+  it(`should use specified current directory`, () => {
+    return new Test(`test 1`, `return () => process.cwd();`, {}, __dirname).
+      run().
+      then(result => expect(result).to.equals(__dirname));
+  });
 });

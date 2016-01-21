@@ -1,4 +1,0 @@
-<msg>Ping ! <$ name $></msg>
-<% for pos in req.pos %>
-<pos><$ pos.lon $></pos>
-<% endfor %>
