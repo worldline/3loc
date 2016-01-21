@@ -37,11 +37,11 @@ Once you have installed Node and a C++ compiler, run the following command to in
 
 From a command line or a terminal, run
 
-    run3loc path/to/fixture.yml
+    run path/to/fixture.yml
 
 CLI options are documented:
 
-    run3loc
+    run
 
 
 # Providing test fixtures

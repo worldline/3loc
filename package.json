@@ -1,12 +1,16 @@
 {
   "name": "3loc",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A simple-yet-customizable integration test tool",
   "bin": {
-    "run3loc": "src/cli.js"
+    "run": "src/cli.js"
   },
   "scripts": {
     "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/worldline/3loc"
   },
   "author": "feugy <damien.feugas@gmail.com>",
   "license": "MIT",
