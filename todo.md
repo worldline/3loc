@@ -1,6 +1,5 @@
 # TODO list
 
-0. toEquals expectation
 0. Add some documentation
 0. request/listen/render actions: use args but overrides with opts
 0. parallel action
