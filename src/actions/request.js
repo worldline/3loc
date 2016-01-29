@@ -3,7 +3,7 @@
 const request = require(`request`);
 const _ = require(`lodash`);
 const Joi = require(`joi`);
-const libxml = require(`libxmljs`);
+const libxml = require(`libxml-xsd`).libxmljs;
 const logger = require(`../utils/logger`)(`act:request`);
 
 // schema to enforce incoming options

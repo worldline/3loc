@@ -3,11 +3,13 @@
 const _ = require(`lodash`);
 const Joi = require(`joi`);
 const basename = require(`path`).basename;
-const libxml = require(`libxmljs`);
+const dirname = require(`path`).dirname;
+const libxsd = require(`libxml-xsd`);
 const expect = require(`chai`).expect;
 const AssertionError = require(`chai`).AssertionError;
 const utils = require(`../utils/object`);
 const logger = require(`../utils/logger`)(`expect:xsd`);
+const libxml = libxsd.libxmljs;
 
 /**
  * Validates incoming content against a given XSD content.
@@ -33,23 +35,48 @@ module.exports = xsd => {
     Joi.object().type(libxml.Document),
     Joi.func()
   ).required(), `matchXsd expectation`);
+  let cwd;
 
   // resolve xsd if provided as a promise
   return args => (_.isFunction(xsd) ?
       Promise.resolve({}).then(xsd) : Promise.resolve({content: xsd})).
     then(result => {
-      if (_.isString(result.content)) {
-        result.content = libxml.parseXmlString(result.content);
-      }
       expect(args, utils.printContext('no content to validate', args._ctx)).to.have.property(`content`);
-      const xml = _.isString(args.content) ? libxml.parseXmlString(args.content) : args.content;
-      // run validation
-      if (!xml.validate(result.content)) {
-        throw new AssertionError(`${utils.printContext(`invalid XML`, args._ctx)}: ${xml.validationErrors.map(err => err.message).join(`\n`).trim()}`);
+      // optionnaly changes current directory because it affects the include/import loading
+      if (args.path) {
+        cwd = process.cwd();
+        const newCwd = dirname(args.path);
+        process.chdir(newCwd);
+        logger.debug(`set working directory to ${newCwd}`);
       }
+
+      xsd = result.content;
+      if (_.isString(xsd)) {
+        xsd = libxml.parseXmlString(xsd);
+      }
+
+      const xml = _.isString(args.content) ? libxml.parseXmlString(args.content) : args.content;
+      expect(xml).to.be.an.instanceOf(libxml.Document);
+
+      // run validation
+      const errors = libxsd.parse(xsd).validate(xml);
+      if (cwd) {
+        process.chdir(cwd);
+      }
+
+      if (errors && errors.length) {
+        throw new AssertionError(`${utils.printContext(`invalid XML`, args._ctx)}: ${errors.map(err => err.message).join(`\n`).trim()}`);
+      }
+
       // reuse enriched version
       args.content = xml;
       logger.debug(`xml is valid against ${args.path ? basename(args.path) : `xsd`}`);
       return args;
+    }).catch(err => {
+      // revert current working directory even in case of error
+      if (cwd) {
+        process.chdir(cwd);
+      }
+      throw err;
     });
 };

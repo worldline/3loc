@@ -1,6 +1,6 @@
 # TODO list
 
-0. use https://github.com/albanm/node-libxml-xsd to support XSD imports
+0. expectToMatchXSD: use the async form of validate to avoid I/O locks
 0. implement relative scn loading and test execution folder for CSV
 0. XPath expectation
 0. request/listen/render actions: use args but overrides with opts
