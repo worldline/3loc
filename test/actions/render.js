@@ -40,7 +40,7 @@ describe(`Nunjucks rendering action`, () => {
     const data = {name: `Damien`, polite: true};
     return run(render(`Hello <$ name $><% if polite %>, nice to meet you<% endif %>.`, data)).
       then(result => {
-        expect(result).to.have.property(`content`).that.equals(`Hello Damien, nice to meet you.`);
+        expect(result).to.have.property(`content`).that.equals(`Hello "Damien", nice to meet you.`);
       });
   });
 

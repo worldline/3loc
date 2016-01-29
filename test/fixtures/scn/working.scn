@@ -1,5 +1,5 @@
 'use strict';
 
 return () => {
-  return Promise.resolve(`<$ msg $> !`);
+  return Promise.resolve(<$ msg $> +  ' !');
 };

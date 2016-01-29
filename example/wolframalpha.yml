@@ -3,9 +3,9 @@ appId: HLJL66-4W3HPXYYP8
 tests:
   - name: nominal case
     input: 3%2B4
-    sum: 7
+    sum: '7'
     status: 200
   - name: handling nulls
     input: 3%2Bnull
-    sum: 3
+    sum: '3'
     status: 200

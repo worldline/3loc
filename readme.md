@@ -21,7 +21,7 @@ In fact, the fixture file is the entry point when using 3loc, as it defined the 
 
 ## Installation
 
-3loc is built upon [Node.js 5+][node].
+3loc is built upon [Node.js 4+][node].
 You'll need to install it on your computer to use it.
 
 As 3loc uses [libXML.js][libxml], which requires some C++ compilation, you'll also need a C++ compiler
@@ -98,6 +98,13 @@ Otherwise, a name with test number will be generated.
 
 You can't use different scenarii for each test. If you whish, write different fixtures files.
 
+Last but not least, a YAML file can include other YAML files, using the following *macro*:
+```yaml
+config: !!inc/file configuration.yaml
+```
+
+The `!!inc/file` performs a *synchronous* read of the given path (relative to the including file) and is replaced by its content.
+
 
 ## With CSV
 
@@ -150,18 +157,29 @@ To improve readability, the default Nunjucks's delimiter have been **changed**:
 - commentStart: '<#'
 - commentEnd: '#>'
 
-Be warned that the replacement *is not type-aware*.
-For example this scenario will fail to compile:
+Be warned that placeholders *are type-aware* (which is an improvment of Nunjuck behavior.
+For example this scenario:
 ```javascript
-load(<% file %>)
+load(<$ file $>)
 ```
-The file variable is probably a string in the fixture file, but once replaced, it looks like:
+It will compiles only if you provides a string value in the fixture file.
+
+Boolean and number types are kepts within templates,
+strings fixtures are automatically enclosed in double quotes,
+arrays and objects are serialized into JSON.
+
+All methods from [lodash v4.0.1][lodash] are also available as Nunjuck filters:
 ```javascript
-load(C:/some/path/to/file.txt)
+run(request(<$ endpoint | pick('url', 'headers') $>)).
+  then(expectContentToInclude(<$ filename | camelCase $>))
 ```
-The string delimiter are missing, so don't forget to include them:
+
+The first method parameter is always the filtered values, and you can add extra parameters.
+It's strictly equivalent to write:
+var _ = require('lodash');
 ```javascript
-load('<% file %>')
+run(request(_.pick(<$ endpoint $>, 'url', 'headers'))).
+  then(expectContentToInclude(_.camelCase(<$ filename $>)))
 ```
 
 You can also hardcode everything, and in that case, the fixtures file only needs to specify scenario path and a name for each tests.
@@ -182,8 +200,8 @@ And it's executed on Node.js.
 That means that Node's API are available (through the use of `require()` function),
 as well as 3loc own dependencies ([lodash](https://lodash.com/), [moment](http://momentjs.com/), [chai](http://chaijs.com/), [joi](https://github.com/hapijs/joi)...)
 
-As your tests are run on Node.js 5+, you can use the ES6 features supported
-(arrow function, promises, string interpolation, classes...).
+As your tests are run on Node.js, you can use the ES6 features supported from version 4.2
+(arrow functions, promises, string interpolation, classes...).
 
 # Available actions
 
@@ -422,3 +440,4 @@ then(expectToMatchXsd(load('schema.xsd')))
 [promise]: http://www.html5rocks.com/en/tutorials/es6/promises/
 [VS]: https://www.visualstudio.com/en-US/products/visual-studio-community-vs.aspx
 [libxml]: https://github.com/polotek/libxmljs/wiki
+[lodash]: https://lodash.com/docs

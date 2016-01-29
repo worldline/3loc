@@ -9,7 +9,7 @@ const getType = require(`../utils/object`).getType;
 
 /**
  * Creates a YAML schema extending js-yaml.DEFAULT_SAFE_SCHEMA,
- * freely inspired from https://github.com/claylo/yaml-include,
+ * freely inspired from https://github.com/claylo/yaml-include
  * but with the support of relative file loading
  *
  * @param {String} root - absolute path from which all included file are relative

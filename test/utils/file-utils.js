@@ -30,37 +30,56 @@ describe(`file utils`, () => {
   describe(`compile`, () => {
 
     it(`should make template replacement`, () => {
-      return utils.compile(`Hi <$ name $>`, {name: 'Florian'}).
+      return utils.compile(`Hi <$ name $>`, {name: `Florian`}).
         then(content => {
-          expect(content).to.equals(`Hi Florian`);
+          expect(content).to.equals(`Hi "Florian"`);
         });
     });
 
     it(`should support nesting`, () => {
       return utils.compile(`Hi <$ person.name $>`, {
-        person: {name: 'Florian'}
+        person: {name: `Florian`}
       }).
         then(content => {
-          expect(content).to.equals(`Hi Florian`);
+          expect(content).to.equals(`Hi "Florian"`);
         });
     });
 
     it(`should replace with data structure`, () => {
-      return utils.compile(`Hi <$ person|stringify $>`, {
-        person: {name: 'Florian'}
+      return utils.compile(`Hi <$ person $>`, {
+        person: {name: `Florian`}
       }).
         then(content => {
           expect(content).to.equals(`Hi {"name":"Florian"}`);
         });
     });
 
+    it(`should serialize arrays`, () => {
+      return utils.compile(`Hi <$ guys $>`, {
+        guys: [`Virgile`, `Sylvain`, `Sebastian`]
+      }).
+        then(content => {
+          expect(content).to.equals(`Hi ["Virgile","Sylvain","Sebastian"]`);
+        });
+    });
+
+    it(`should serialize booleans and number`, () => {
+      return utils.compile(`We are <$ num $> peoples in team ? <$ right $>`, {
+        num: 5,
+        right: true
+      }).
+        then(content => {
+          expect(content).to.equals(`We are 5 peoples in team ? true`);
+        });
+    });
+
     it(`should refer parent data`, () => {
       return utils.compile(`<% for p in persons %><$ p.name $> <$ num $><% endfor %>`, {
-        persons: [{name: 'Florian'}],
+        persons: [{name: `Florian`}],
         num: 1
       }).
         then(content => {
-          expect(content).to.equals(`Florian 1`);
+          expect(content).to.equals(`"Florian" 1`);
         });
     });
 

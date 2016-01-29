@@ -3,6 +3,8 @@
 const fs = require(`fs`);
 const path = require(`path`);
 const nunjucks = require(`nunjucks`);
+const helpers = require(`../helpers`);
+const getType = require(`./object`).getType;
 
 // use a dedicated Nunjucks environmenent for compilation
 const compiler = new nunjucks.Environment(null, {
@@ -20,8 +22,25 @@ const compiler = new nunjucks.Environment(null, {
   }
 });
 
-// add a stringify filter to pass data structures
-compiler.addFilter(`stringify`, JSON.stringify);
+// Nunjucks is focused on text output, but we need it to output some JavaScript.
+// So we need to enclose string values into quotes, and to stringify arrays and objects.
+// This hook will ensure that types are consistents.
+const original = nunjucks.runtime.suppressValue;
+nunjucks.runtime.suppressValue = (value, autoescape) => {
+  value = original(value, autoescape);
+  const type = getType(value);
+  if (type === `string`) {
+    value = `"${value}"`;
+  } else if ([`boolean`, `number`].indexOf(type) === -1) {
+    value = JSON.stringify(value);
+  }
+  return value;
+};
+
+// add the available helpers as Nunjucks filters
+for (let helper in helpers) {
+  compiler.addFilter(helper, helpers[helper]);
+}
 
 /**
  * Loads body from a given file

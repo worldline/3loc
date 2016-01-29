@@ -23,7 +23,6 @@ module.exports = element => {
   Joi.assert(element, Joi.alternatives().try(Joi.string(), Joi.object().type(RegExp)).required(), `content expectation`);
   const operation = utils.getType(element) === `string` ? `includes` : `matches`;
   return args => {
-    console.log('got arg', args);
     expect(args, utils.printContext(`unexpected content`, args._ctx)).to.have.property(`content`).that[operation](element);
     logger.debug(`content ${operation} ${element}`);
     return args;

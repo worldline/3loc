@@ -9,7 +9,7 @@ describe(`Test class`, () => {
     return new Test(`test 1`,
       `return function() { return 'hi <$ name $> !'}`,
       {name: `Virgile`}
-    ).run().then(result => expect(result).to.equals(`hi Virgile !`));
+    ).run().then(result => expect(result).to.equals(`hi "Virgile" !`));
   });
 
   it(`should make enforce fixture presence`, () => {

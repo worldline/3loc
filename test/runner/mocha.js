@@ -34,11 +34,14 @@ describe(`Mocha runner`, () => {
     });
   });
 
-  it(`should execute in specified current directory`, () => {
+  it(`should execute in specified current directory`, function() {
+    /* eslint no-invalid-this: 0 */
+    this.timeout(3000);
+
     // given a test that check its own current directory
     const content = `return () => {
-      if (process.cwd() !== '<$ cwd $>') {
-        throw new Error('expected <$ cwd $> but got: ' + process.cwd());
+      if (process.cwd() !== <$ cwd $>) {
+        throw new Error('expected "<$ cwd $>" but got: ' + process.cwd());
       }
     };`;
     return run([
