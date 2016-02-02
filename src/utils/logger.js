@@ -150,14 +150,14 @@ fs.watch(path.dirname(confPath), {persistent: false}, (evt, filename) => {
 
 /**
  * Logger factory.
- * Builds a new logger (default level to debug) or reused already created instance.
+ * Builds a new logger (default level to warn) or reused already created instance.
  *
  * @param {String} name - of the expected logger
  * @return {Logger} the created (or reused) instance
  */
 module.exports = name => {
   if (!(name in loggers)) {
-    loggers[name] = new Logger(name, (configuration[name] && configuration[name].level) || `debug`);
+    loggers[name] = new Logger(name, (configuration[name] && configuration[name].level) || `warn`);
   }
   return loggers[name];
 };

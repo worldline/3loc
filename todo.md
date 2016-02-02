@@ -1,5 +1,6 @@
 # TODO list
 
+0. Nunjucks templating: disable type aware with filter
 0. expectToMatchXSD: use the async form of validate to avoid I/O locks
 0. implement relative scn loading and test execution folder for CSV
 0. XPath expectation

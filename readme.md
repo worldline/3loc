@@ -141,6 +141,25 @@ Whatever the format used, the following considerations always apply:
 - When providing scenario content directly, the execution folder is the one containing the fixture file
 
 
+# Logging
+
+By default, 3loc is not really verbose.
+But it can be more chatty if you configure logging: just put a `logging.properties` file in the execution folder.
+
+The file syntax is a classical [INI][ini] file where the category is the logger name, and the values allows to customize its parameter:
+```properties
+[my-logger-1]
+level=error
+
+[my-logger-2]
+level=debug
+```
+
+The conf is regularly watched so you can change you file while 3loc is running.
+
+By convention, each actions/expectation uses its own logger, so you can have a fine-grained tunning.
+
+
 # Scenario authoring
 
 Scenario files are JavaScript files, templated with [Nunjucks][nunjucks] template language.
@@ -157,7 +176,7 @@ To improve readability, the default Nunjucks's delimiter have been **changed**:
 - commentStart: '<#'
 - commentEnd: '#>'
 
-Be warned that placeholders *are type-aware* (which is an improvment of Nunjuck behavior.
+Be warned that placeholders **are type-aware** (which is an improvment of Nunjuck behavior).
 For example this scenario:
 ```javascript
 load(<$ file $>)
@@ -252,6 +271,8 @@ listen({
   - **content** *{String}* - response body received (might be parsed in JSON/XML)
   - **headers** *{Object}* - response headers
 
+Logger name: `act:listen`
+
 ## load
 
 Loads file content as a string.
@@ -268,6 +289,8 @@ load('./path_to/file.txt', 'ascii').then(...)
   Returns a promise fulfilled with the same object, containing
   - **content** *{String}* - response body received (might be parsed in JSON/XML)
   - **path** *{Object}* - absolute or relative path to read file
+
+Logger name: `act:load`
 
 ## render
 
@@ -294,6 +317,8 @@ with an object including a `content` and `path` properties.
   Takes as first parameter an object
   Returns a promise fulfilled with the same object, containing
   - **content** *{String}* - the rendered template
+
+Logger name: `act:render`
 
 ## request
 
@@ -337,6 +362,8 @@ with an object including a `content` property.
   - **headers** *{Object}* - response headers
   - **code** *{Number}* - http status code
 
+Logger name: `act:request`
+
 ## run
 
 Runs synchronously a given function, with provided data, and wrap to
@@ -351,6 +378,8 @@ run(request({url: 'http://somewhere.com/'}))
 - **data = {}** *{Object}* - optionnal data given as function argument
 
 - **returns** *{Promise}* fulfilled with the function result
+
+Logger name: `act:run`
 
 ## runSerial
 
@@ -370,6 +399,8 @@ runSerial([
 - **tasks** *{Array<Function>}* - tasks to be executed
 - **returns** *{Function}* that when invoked, will return promise fulfilled
 with the latest task's result
+
+Logger name: `act:serial`
 
 
 # Expectations
@@ -396,6 +427,8 @@ then(expectcontentToInclude('Hi !'))
   - **content** *{Object}* - checked content
   - **returns** *{Promise}* fulfilled with the same object
 
+Logger name: `expect:content`
+
 ## expectStatusCode
 
 Checks that a given status code has been received.
@@ -410,6 +443,8 @@ then(expectStatusCode(404))
   Takes as first parameter an object containing
   - **code** *{Object}* - checked code value
   - **returns** *{Promise}* fulfilled with the same object
+
+Logger name: `expect:status`
 
 ## expectToMatchXsd
 
@@ -431,6 +466,8 @@ then(expectToMatchXsd(load('schema.xsd')))
   - **content** *{String|Object}* - xml content validated
   - **returns** *{Promise}* fulfilled with the same object, where content has been enriched as a libXML.js's Document
 
+Logger name: `expect:xsd`
+
 [node]: https://nodejs.org/en/download/
 [act]: #available-actions
 [expect]: #expectations
@@ -441,3 +478,4 @@ then(expectToMatchXsd(load('schema.xsd')))
 [VS]: https://www.visualstudio.com/en-US/products/visual-studio-community-vs.aspx
 [libxml]: https://github.com/polotek/libxmljs/wiki
 [lodash]: https://lodash.com/docs
+[ini]: https://en.wikipedia.org/wiki/INI_file

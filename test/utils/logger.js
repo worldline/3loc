@@ -56,11 +56,11 @@ describe(`Logger`, () => {
     it(`should reload level on file change`, done => {
       const num = randomInt();
       const logger = getLogger(`my-logger${num}`);
-      expect(logger.level).to.equals(`debug`);
-      fs.writeFile(confPath, `[my-logger${num}]\nlevel=warn`, err => {
+      expect(logger.level).to.equals(`warn`);
+      fs.writeFile(confPath, `[my-logger${num}]\nlevel=debug`, err => {
         expect(err).not.to.exist;
         setTimeout(() => {
-          expect(logger.level).to.equals(`warn`);
+          expect(logger.level).to.equals(`debug`);
           fs.writeFile(confPath, `[my-logger${num}]\nlevel=error`, err2 => {
             expect(err2).not.to.exist;
             setTimeout(() => {
@@ -98,7 +98,7 @@ describe(`Logger`, () => {
         fs.chmod(confPath, `200`, err2 => {
           expect(err2).not.to.exist;
           const logger = getLogger(`my-logger${num}`);
-          expect(logger.level).to.equals(`debug`);
+          expect(logger.level).to.equals(`warn`);
           done();
         });
       });
@@ -136,7 +136,7 @@ describe(`Logger`, () => {
     };
 
     it(`should ouput timestamped messages`, () => {
-      logger.log(`test 1`, 10);
+      logger.warn(`test 1`, 10);
       expect(output).to.have.lengthOf(1);
       let log = output[0];
       restoreConsole();
