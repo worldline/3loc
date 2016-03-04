@@ -27,14 +27,19 @@ const compiler = new nunjucks.Environment(null, {
 // This hook will ensure that types are consistents.
 const original = nunjucks.runtime.suppressValue;
 nunjucks.runtime.suppressValue = (value, autoescape) => {
-  value = original(value, autoescape);
-  const type = getType(value);
+  let escapedValue = original(value, autoescape);
+  const type = getType(escapedValue);
+  console.log(escapedValue, type, type === `string` && !value.unquote)
   if (type === `string`) {
-    value = `"${value}"`;
+    if (value.unquote) {
+      escapedValue = escapedValue.toString();
+    } else {
+      escapedValue = `"${escapedValue}"`;
+    }
   } else if ([`boolean`, `number`].indexOf(type) === -1) {
-    value = JSON.stringify(value);
+    escapedValue = JSON.stringify(escapedValue);
   }
-  return value;
+  return escapedValue;
 };
 
 // add the available helpers as Nunjucks filters
