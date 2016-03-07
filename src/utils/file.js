@@ -29,7 +29,6 @@ const original = nunjucks.runtime.suppressValue;
 nunjucks.runtime.suppressValue = (value, autoescape) => {
   let escapedValue = original(value, autoescape);
   const type = getType(escapedValue);
-  console.log(escapedValue, type, type === `string` && !value.unquote)
   if (type === `string`) {
     if (value.unquote) {
       escapedValue = escapedValue.toString();
