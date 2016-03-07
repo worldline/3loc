@@ -25,6 +25,7 @@
     "joi": "7.2.3",
     "js-yaml": "3.5.2",
     "libxmljs": "0.16.1",
+    "libxml-xsd": "0.5.2",
     "lodash": "4.0.1",
     "mocha": "2.4.5",
     "moment": "2.10.6",
