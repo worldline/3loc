@@ -73,7 +73,7 @@ module.exports = opt => {
     return (_.isFunction(opt.body) ?
         Promise.resolve({}).then(opt.body) : Promise.resolve({content: opt.body})).
       then(result => {
-      // request body default content type and serialization
+        // request body default content type and serialization
         let response = result.content;
         let defaults = {};
         if (response instanceof libxml.Document) {
@@ -107,7 +107,7 @@ module.exports = opt => {
 
         app.use((req, res) => {
           const code = opt.code || 200;
-          logger.debug(`listen to ${method} ${opt.url} got request and send ${code}`);
+          logger.debug(`listen to ${method} ${opt.url} got request on ${req.url} and send ${code}`);
           if (content.response) {
             logger.debug(`send response:\n${content.response}`);
           }
@@ -138,7 +138,7 @@ module.exports = opt => {
             } catch (exc) {
               end(exc);
             }
-          }, 2);
+          }, 100);
         });
 
         server = app.listen(opt.port).on(`error`, end);
