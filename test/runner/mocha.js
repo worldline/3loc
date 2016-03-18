@@ -64,4 +64,33 @@ describe(`Mocha runner`, () => {
       });
   });
 
+  it(`should execute failing test after timeout expire`, () => {
+    const test = new Test(`test 1`, `'use strict';
+      return () => {
+       return new Promise(() => {});
+      };
+    `, {config: {timeout: 500}});
+    return run([test], opts).then(report => {
+      expect(report).to.be.exist;
+      expect(report).to.have.property(`tests`).that.equals(1);
+      expect(report).to.have.property(`failures`).that.equals(1);
+      expect(report).to.have.property(`duration`).that.below(510);
+    });
+  });
+
+  it(`should execute failing test after default timeout expire`, function() {
+    this.timeout(3000);
+    const test = new Test(`test 1`, `'use strict';
+      return () => {
+        return new Promise(() => {});
+      };
+    `, {});
+    return run([test], opts).then(report => {
+      expect(report).to.be.exist;
+      expect(report).to.have.property(`tests`).that.equals(1);
+      expect(report).to.have.property(`failures`).that.equals(1);
+      expect(report).to.have.property(`duration`).that.below(2010);
+    });
+  });
+
 });
