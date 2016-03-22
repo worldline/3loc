@@ -103,8 +103,14 @@ Last but not least, a YAML file can include other YAML files, using the followin
 config: !!inc/file configuration.yaml
 ```
 
+
 The `!!inc/file` performs a *synchronous* read of the given path (relative to the including file) and is replaced by its content.
 
+In this `config` array, you can set a `timeout` to modify the duration of the test suite created for your scenarii
+```yaml
+config: 
+  timeout: 5000
+```
 
 ## With CSV
 
