@@ -75,6 +75,7 @@ describe(`Mocha runner`, () => {
       expect(report).to.have.property(`tests`).that.equals(1);
       expect(report).to.have.property(`failures`).that.equals(1);
       expect(report).to.have.property(`duration`).that.below(510);
+      expect(report).to.have.property(`duration`).at.least(500);
     });
   });
 
@@ -90,7 +91,10 @@ describe(`Mocha runner`, () => {
       expect(report).to.have.property(`tests`).that.equals(1);
       expect(report).to.have.property(`failures`).that.equals(1);
       expect(report).to.have.property(`duration`).that.below(2010);
+      expect(report).to.have.property(`duration`).at.least(500);
     });
   });
+
+
 
 });

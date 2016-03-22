@@ -21,7 +21,6 @@ const toMocha = (tests, suiteName) => {
   for (let test of tests) {
     if (test.fixtures.config && test.fixtures.config.timeout) {
       let timeout = test.fixtures.config.timeout;
-      console.log(timeout);
       suite.timeout(timeout > 0 ? timeout : 2000);
     }
     suite.addTest(new Test(test.name, () => test.run()));
