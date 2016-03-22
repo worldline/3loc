@@ -1,6 +1,6 @@
 {
   "name": "3loc",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A simple-yet-customizable integration test tool",
   "bin": {
     "run": "src/cli.js"
