@@ -5,6 +5,16 @@ const helpers = require(`../../src/helpers`);
 
 describe(`Nunjucks helpers`, () => {
 
+  describe(`unquote`, () => {
+
+    it(`should unquote only strings`, () => {
+      const unquoted = helpers.unquote(`something`);
+      expect(unquoted).to.be.an.instanceof(String);
+      expect(unquoted.toString()).to.equals(`something`);
+      expect(unquoted).to.have.property(`unquote`).that.is.true;
+    });
+  });
+
   describe(`stringify`, () => {
 
     it(`should stringify plain variables`, () => {
