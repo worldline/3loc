@@ -24,11 +24,13 @@ module.exports = class Test {
    * @param {String} name - test's name
    * @param {String} file - scenario file path or directly scenario content
    * @param {Object} fixtures - test data fixtures
+   * @param {Integer} timeout = 2000 - test specific timeout
    * @param {String} workdir = '.' - path used as execution working folder
    */
-  constructor(name, file, fixtures, workdir) {
+  constructor(name, file, fixtures, timeout, workdir) {
     this.name = name;
     this.file = file;
+    this.timeout = timeout || 2000;
     this.workdir = workdir || `.`;
     if (!fixtures) {
       throw new Error(`can't create ${this.constructor.name} scenario without fixtures`);

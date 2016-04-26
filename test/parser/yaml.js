@@ -3,6 +3,7 @@
 const expect = require(`chai`).expect;
 const join = require(`path`).join;
 const parse = require(`../../src/parser/yaml`);
+const Test = require(`../../src/engine/test`);
 
 const fixtures = join(__dirname, `..`, `fixtures`, `yaml`);
 
@@ -49,19 +50,36 @@ describe(`YAML Spec parser`, () => {
     return parse(join(fixtures, `noname.yaml`)).
       then(scenarii => {
         expect(scenarii).to.have.lengthOf(2);
+        expect(scenarii[0]).to.be.an.instanceOf(Test);
         expect(scenarii[0]).to.have.property(`name`).that.equals(`test 1`);
+        expect(scenarii[1]).to.be.an.instanceOf(Test);
         expect(scenarii[1]).to.have.property(`name`).that.equals(`test 2`);
       });
+  });
+
+  it(`should extract test timeout`, () => {
+    return parse(join(fixtures, `timeout.yaml`)).then(scenarii => {
+      expect(scenarii).to.have.lengthOf(2);
+      expect(scenarii[0]).to.be.an.instanceOf(Test);
+      expect(scenarii[0]).to.have.property(`timeout`).that.equals(3000);
+      expect(scenarii[1]).to.be.an.instanceOf(Test);
+      expect(scenarii[1]).to.have.property(`timeout`).that.equals(2000);
+    });
   });
 
   it(`should extract fixtures`, () => {
     return parse(join(fixtures, `simple.yaml`)).
       then(scenarii => {
         expect(scenarii).to.have.lengthOf(1);
+        expect(scenarii[0]).to.be.an.instanceOf(Test);
         expect(scenarii[0]).to.have.property(`name`).that.equals(`first test`);
+        expect(scenarii[0]).to.have.property(`timeout`).that.equals(500);
         expect(scenarii[0].fixtures).to.have.property(`id`).that.equals(123456);
         expect(scenarii[0].fixtures).to.have.property(`insurer`).that.equals(`IN1`);
         expect(scenarii[0].fixtures).to.have.property(`scoring`).that.equals(`C1`);
+        expect(scenarii[0].fixtures).not.to.have.property(`timeout`);
+        expect(scenarii[0].fixtures).not.to.have.property(`name`);
+        expect(scenarii[0].fixtures).not.to.have.property(`scenario`);
       });
   });
 

@@ -18,12 +18,12 @@ const toMocha = (tests, suiteName) => {
   // declares a single describe for all tests.
   const suite = new Suite(suiteName);
   // and declares all specified tests
-  for (let test of tests) {
-    if (test.fixtures.config && test.fixtures.config.timeout) {
-      let timeout = test.fixtures.config.timeout;
-      suite.timeout(timeout > 0 ? timeout : 2000);
-    }
-    suite.addTest(new Test(test.name, () => test.run()));
+  for (let spec of tests) {
+    let test = new Test(spec.name, () => spec.run());
+    suite.addTest(test);
+    // test timeout should be set after affectation to a suite,
+    // suite propagate its own timeout first
+    test.timeout(spec.timeout);
   }
   return suite;
 };
