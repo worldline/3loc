@@ -477,6 +477,14 @@ then(expectToMatchXsd(load('schema.xsd')))
 
 Logger name: `expect:xsd`
 
+
+# Changelog
+
+## 0.5.0
+- add test coverage for Nunjuck unquote helper
+- fix timeout that applies to all suite and provide dedicated input field
+- configure all loggers at once with `all`
+
 [node]: https://nodejs.org/en/download/
 [act]: #available-actions
 [expect]: #expectations
