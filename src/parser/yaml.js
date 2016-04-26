@@ -75,9 +75,9 @@ const parseFile = (fullpath, content) =>
 
         if (Array.isArray(spec.tests)) {
           result = spec.tests.map((fixture, i) => {
-            let name = fixture.name || `test ${i + 1}`;
+            const name = fixture.name || `test ${i + 1}`;
             // creates scenario with common values, but possibility to be specific overloaded
-            return new Test(name, scenario, _.merge({}, common, _.omit(fixture, `name`)), workdir);
+            return new Test(name, scenario, _.merge({}, common, _.omit(fixture, `name`, `timeout`)), fixture.timeout, workdir);
           });
         }
         resolve(result);

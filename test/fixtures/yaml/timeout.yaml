@@ -1,0 +1,5 @@
+scenario: ./fixtures/scn/noop.scn
+tests:
+  - name: test 1
+    timeout: 3000
+  - name: test 2

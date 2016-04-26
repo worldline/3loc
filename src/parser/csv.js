@@ -62,15 +62,17 @@ const parseFile = content =>
       const tests = [];
       let i = 1;
       for (let fixture of fixtures) {
-        let name = fixture.name || `test ${i++}`;
-        let scenario = fixture.scenario;
+        const name = fixture.name || `test ${i++}`;
+        const scenario = fixture.scenario;
+        const timeout = fixture.timeout;
         if (!scenario) {
           reject(new Error(`Missing scenario for test ${name}`));
           break;
         }
         delete fixture.name;
         delete fixture.scenario;
-        tests.push(new Test(name, scenario, unflatten(fixture)));
+        delete fixture.timeout;
+        tests.push(new Test(name, scenario, unflatten(fixture), timeout));
       }
       resolve(tests);
     })

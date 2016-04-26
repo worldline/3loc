@@ -13,7 +13,7 @@ If received results are not the one expected, it will complain.
 
 It's focused on Http services, SOAP and REST.
 
-Test scenarii are basically JavaScript files, containing a serie of *[actions][act]* and *[expectations][expect]*.
+Test scenarii are basically JavaScript files, containing a series of *[actions][act]* and *[expectations][expect]*.
 You will surely need to run the same scenario multiple times, with slight changes in the test data: body sent to the tested WebService, or expected status code.
 
 We called them *[fixtures][fixt]*, and you can externalize them in a dedicated file (multiple format are supported).
@@ -61,7 +61,7 @@ return () =>
 It makes an Http call to the [Wolfram API][wolfram], get and parse the XML content,
 checks the received status code and check the result with an XPath expression.
 
-See thoses `<$ $>` placeholders (`input`, `sum`...) ? they are replaced with the provided test data.
+See those `<$ $>` placeholders (`input`, `sum`...) ? they are replaced with the provided test data.
 
 
 ## With YAML
@@ -73,6 +73,7 @@ scenario: ./path_to/my-scenario.scn
 appId: HLJL66-4W3HPXYYP8
 tests:
   - name: nominal case
+    timeout: 3000
     input: 3%2B4
     sum: 7
     status: 200
@@ -96,6 +97,9 @@ The content will be used inside the scenario file:
 If you specify a `name` at test level, it will be used in final report.
 Otherwise, a name with test number will be generated.
 
+You can also provide a test-specific timeout (in millisecond, default to 2000).
+
+
 You can't use different scenarii for each test. If you whish, write different fixtures files.
 
 Last but not least, a YAML file can include other YAML files, using the following *macro*:
@@ -103,14 +107,8 @@ Last but not least, a YAML file can include other YAML files, using the followin
 config: !!inc/file configuration.yaml
 ```
 
-
 The `!!inc/file` performs a *synchronous* read of the given path (relative to the including file) and is replaced by its content.
 
-In this `config` array, you can set a `timeout` to modify the duration of the test suite created for your scenarii
-```yaml
-config: 
-  timeout: 5000
-```
 
 ## With CSV
 
@@ -132,6 +130,8 @@ and the data is an `host` object containing an `url` property.
 
 If you specify a `name` column, it will be used in final report.
 Otherwise, a name with test number will be generated.
+
+You can also set a `timeout` column to customize tests timeout (in millisecond, default to 2000).
 
 You can't share data among different tests. For that, please use a YAML fixture file.
 
@@ -160,6 +160,9 @@ level=error
 [my-logger-2]
 level=debug
 ```
+
+You can provide a category named `all` in order to customize all loggers level at once.
+This `all` general configuration will always be overriden by logger-specific configuration.
 
 The conf is regularly watched so you can change you file while 3loc is running.
 
@@ -473,6 +476,14 @@ then(expectToMatchXsd(load('schema.xsd')))
   - **returns** *{Promise}* fulfilled with the same object, where content has been enriched as a libXML.js's Document
 
 Logger name: `expect:xsd`
+
+
+# Changelog
+
+## 0.5.0
+- add test coverage for Nunjuck unquote helper
+- fix timeout that applies to all suite and provide dedicated input field
+- configure all loggers at once with `all`
 
 [node]: https://nodejs.org/en/download/
 [act]: #available-actions

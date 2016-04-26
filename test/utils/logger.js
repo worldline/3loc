@@ -43,11 +43,34 @@ describe(`Logger`, () => {
     });
 
     it(`should read level from file for new loggers`, done => {
-      fs.writeFile(confPath, `[test:logger1]\nlevel=warn\n\n[logger2]\nlevel=error`, err => {
+      fs.writeFile(confPath, `[test:logger1]\nlevel=info\n\n[logger2]\nlevel=error`, err => {
         expect(err).not.to.exist;
         setTimeout(() => {
-          expect(getLogger(`test:logger1`).level).to.equals(`warn`);
+          expect(getLogger(`test:logger1`).level).to.equals(`info`);
           expect(getLogger(`logger2`).level).to.equals(`error`);
+          expect(getLogger(`logger3`).level).to.equals(`warn`);
+          done();
+        }, 10);
+      });
+    });
+
+    it(`should apply general level`, done => {
+      fs.writeFile(confPath, `[all]\nlevel=info`, err => {
+        expect(err).not.to.exist;
+        setTimeout(() => {
+          expect(getLogger(`test:logger1`).level).to.equals(`info`);
+          expect(getLogger(`logger2`).level).to.equals(`info`);
+          done();
+        }, 10);
+      });
+    });
+
+    it(`should override general level with specific level`, done => {
+      fs.writeFile(confPath, `[all]\nlevel=info\n\n[logger1]\nlevel=error`, err => {
+        expect(err).not.to.exist;
+        setTimeout(() => {
+          expect(getLogger(`logger1`).level).to.equals(`error`);
+          expect(getLogger(`logger2`).level).to.equals(`info`);
           done();
         }, 10);
       });
@@ -103,7 +126,6 @@ describe(`Logger`, () => {
         });
       });
     });
-
   });
 
   describe(`given a mocked console`, () => {

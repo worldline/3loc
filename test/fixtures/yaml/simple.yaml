@@ -1,6 +1,7 @@
 scenario: ./fixtures/scn/noop.scn
 tests:
   - name: first test
+    timeout: 500
     id: 123456
     vehicle: 123456
     insurer: IN1

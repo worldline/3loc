@@ -18,8 +18,13 @@ describe(`Test class`, () => {
     )).to.throw(/without fixtures/);
   });
 
+  it(`should allow to customize timeout value`, () => {
+    expect(new Test(`test 1`, `return () => {}`, {})).to.have.property(`timeout`).that.equals(2000);
+    expect(new Test(`test 2`, `return () => {}`, {}, 500)).to.have.property(`timeout`).that.equals(500);
+  });
+
   it(`should use specified current directory`, () => {
-    return new Test(`test 1`, `return () => process.cwd();`, {}, __dirname).
+    return new Test(`test 1`, `return () => process.cwd();`, {}, null, __dirname).
       run().
       then(result => expect(result).to.equals(__dirname));
   });

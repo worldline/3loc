@@ -44,6 +44,14 @@ describe(`Nunjucks rendering action`, () => {
       });
   });
 
+  it(`should not quote strings data when using 'unquote' helper`, () => {
+    const data = {name: `Damien`, polite: false};
+    return run(render(`Hello <$ name | unquote $><% if polite %>, nice to meet you<% endif %>.`, data)).
+      then(result => {
+        expect(result).to.have.property(`content`).that.equals(`Hello Damien.`);
+      });
+  });
+
   it(`should render template without data`, () => {
     return run(render(`Hello !`)).
       then(result => {
