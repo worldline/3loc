@@ -78,6 +78,11 @@ const reloadConf = (confPath, sync) =>
   then(conf => {
     // tries to update existing loggers
     for (let name in loggers) {
+      // update first with general level
+      if (conf.all && conf.all.level) {
+        loggers[name].level = conf.all.level;
+      }
+      // optionnally overrides with specific logger's level
       if (conf[name] && conf[name].level) {
         loggers[name].level = conf[name].level;
       }

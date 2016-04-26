@@ -161,6 +161,9 @@ level=error
 level=debug
 ```
 
+You can provide a category named `all` in order to customize all loggers level at once.
+This `all` general configuration will always be overriden by logger-specific configuration.
+
 The conf is regularly watched so you can change you file while 3loc is running.
 
 By convention, each actions/expectation uses its own logger, so you can have a fine-grained tunning.
